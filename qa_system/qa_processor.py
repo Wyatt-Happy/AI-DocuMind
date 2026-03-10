@@ -13,8 +13,8 @@ except Exception as e:
 import requests
 import json
 import os
-from utils.ner_processor import NERProcessor
-from utils.knowledge_graph import KnowledgeGraph
+from core.ner_processor import NERProcessor
+from core.knowledge_graph import KnowledgeGraph
 
 class QAProcessor:
     def __init__(self, vector_store, knowledge_graph=None):

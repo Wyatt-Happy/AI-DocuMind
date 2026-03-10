@@ -212,9 +212,10 @@
         <!-- 导航栏 -->
         <div class="nav">
             <button class="active" onclick="showSection('upload')">文件上传</button>
-            <button onclick="showSection('businessTypes')">业务类型管理</button>
             <button onclick="showSection('qa')">智能问答</button>
             <button onclick="showSection('query')">人员查询</button>
+            <button onclick="showSection('smartDocument')">智能文书</button>
+            <button onclick="showSection('dataManagement')">数据管理</button>
         </div>
         
         <!-- 文件上传区域 -->
@@ -253,33 +254,6 @@
             </div>
         </div>
         
-        <!-- 业务类型管理区域 -->
-        <div id="businessTypes" class="section">
-            <h2>业务类型管理</h2>
-            <div class="grid">
-                <div>
-                    <h3>添加业务类型</h3>
-                    <form id="addBusinessTypeForm">
-                        <div class="form-group">
-                            <label for="businessTypeName">业务类型名称</label>
-                            <input type="text" id="businessTypeName" name="name" placeholder="例如：刑事案件" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="businessTypeDesc">描述</label>
-                            <textarea id="businessTypeDesc" name="description" placeholder="例如：刑事案件相关的档案"></textarea>
-                        </div>
-                        <button type="submit">添加</button>
-                        <div id="addBusinessTypeResult"></div>
-                    </form>
-                </div>
-                <div>
-                    <h3>业务类型列表</h3>
-                    <button onclick="listBusinessTypes()">刷新列表</button>
-                    <div id="businessTypeList" class="result"></div>
-                </div>
-            </div>
-        </div>
-        
         <!-- 智能问答区域 -->
         <div id="qa" class="section">
             <h2>智能问答</h2>
@@ -305,6 +279,150 @@
                 <div id="queryResult"></div>
             </form>
         </div>
+        
+        <!-- 智能文书生成区域 -->
+        <div id="smartDocument" class="section">
+            <h2>智能文书生成</h2>
+            
+            <!-- 步骤1：选择业务类型 -->
+            <div id="docInputSection" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>步骤1：选择业务类型</h3>
+                <p style="color: #666; margin-bottom: 15px;">选择已上传并分析过的业务类型，系统将自动加载模板结构</p>
+                
+                <div class="form-group">
+                    <label for="selectBusinessType">业务类型</label>
+                    <select id="selectBusinessType" onchange="loadBusinessTypeAnalysis()">
+                        <option value="">请选择业务类型</option>
+                    </select>
+                </div>
+                
+                <button type="button" onclick="refreshBusinessTypesList()">刷新列表</button>
+                <div id="loadResult" style="margin-top: 15px;"></div>
+            </div>
+            
+            <!-- 步骤2：模板信息展示 -->
+            <div id="analysisResultSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>步骤2：模板信息</h3>
+                
+                <div id="templateInfo" style="margin-bottom: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                    <p><strong>源文件：</strong><span id="sourceFilename">-</span></p>
+                    <p><strong>可复用部分：</strong><span id="reusableCount">0</span> 个</p>
+                    <p><strong>需要填写：</strong><span id="variableCount">0</span> 个变量</p>
+                </div>
+                
+                <div id="reusablePartsSection" style="margin-bottom: 20px;">
+                    <h4>可复用部分（模板固定内容）</h4>
+                    <div id="reusablePartsList" style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+                
+                <div id="variablePartsSection" style="margin-bottom: 20px;">
+                    <h4>需要填写的变量</h4>
+                    <div id="variablePartsList"></div>
+                </div>
+                
+                <button type="button" onclick="showFillForm()">进入填写页面</button>
+            </div>
+            
+            <!-- 步骤3：填写变量 -->
+            <div id="fillSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>步骤3：填写信息</h3>
+                <p style="color: #666; margin-bottom: 15px;">请填写以下信息，AI将结合模板生成完整文书</p>
+                
+                <div id="variableInputs"></div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="generationContext">上下文信息（可选）</label>
+                    <textarea id="generationContext" rows="3" placeholder="输入额外的上下文信息，帮助AI更好地生成文书..."></textarea>
+                </div>
+                
+                <button type="button" onclick="generateSmartDocument()">生成文书</button>
+                <div id="generateResult" style="margin-top: 15px;"></div>
+            </div>
+            
+            <!-- 步骤4：生成的文书展示 -->
+            <div id="resultSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>生成的文书</h3>
+                <div class="form-group">
+                    <label for="generatedDocument">文书内容</label>
+                    <textarea id="generatedDocument" rows="15" style="font-family: 'Courier New', monospace;"></textarea>
+                </div>
+                
+                <div id="traceabilityInfo" style="margin-top: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+                    <h4>溯源信息</h4>
+                    <div id="traceabilityContent"></div>
+                </div>
+                
+                <button type="button" onclick="saveGeneratedDocument()">保存文书</button>
+                <button type="button" onclick="resetSmartDocumentForm()">重新开始</button>
+            </div>
+        </div>
+        
+        <!-- 数据管理区域 -->
+        <div id="dataManagement" class="section">
+            <h2>数据管理</h2>
+            
+            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>数据状态</h3>
+                <button type="button" onclick="loadDataStatus()">刷新数据状态</button>
+                <div id="dataStatus" style="margin-top: 15px;"></div>
+            </div>
+            
+            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>业务类型管理</h3>
+                <div style="margin-bottom: 15px;">
+                    <h4>添加业务类型</h4>
+                    <div class="form-group">
+                        <label for="newBusinessTypeName">业务类型名称</label>
+                        <input type="text" id="newBusinessTypeName" placeholder="例如：刑事案件">
+                    </div>
+                    <button type="button" onclick="addBusinessType()">添加业务类型</button>
+                    <div id="addBusinessTypeResult" style="margin-top: 10px;"></div>
+                </div>
+                
+                <div>
+                    <h4>业务类型列表</h4>
+                    <button type="button" onclick="listBusinessTypes()">刷新列表</button>
+                    <div id="businessTypesList" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>删除文件数据</h3>
+                <div class="form-group">
+                    <label for="deleteFilename">文件名</label>
+                    <select id="deleteFilename" name="filename">
+                        <option value="">请选择要删除的文件</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="deleteVector" name="deleteVector" checked>
+                        删除向量存储数据
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="deleteKnowledgeGraph" name="deleteKnowledgeGraph" checked>
+                        删除知识图谱数据
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="deleteNER" name="deleteNER" checked>
+                        删除NER数据
+                    </label>
+                </div>
+                <button type="button" onclick="deleteFileData()">删除文件数据</button>
+                <div id="deleteResult" style="margin-top: 15px;"></div>
+            </div>
+            
+            <div style="padding: 20px; border: 1px solid #ff0000; border-radius: 8px; background-color: #fff5f5;">
+                <h3 style="color: #ff0000;">清空所有数据</h3>
+                <p style="color: #ff0000; margin-bottom: 15px;">警告：此操作将清空所有数据，包括向量存储、知识图谱、NER数据、业务类型和文件映射，且无法恢复！</p>
+                <button type="button" onclick="clearAllData()" style="background-color: #ff0000; color: white;">清空所有数据</button>
+                <div id="clearResult" style="margin-top: 15px;"></div>
+            </div>
+        </div>
     </div>
     
     <script>
@@ -328,8 +446,14 @@
                 loadBusinessTypes();
             }
             
-            // 如果切换到业务类型管理页面，加载业务类型列表
-            if (sectionId === 'businessTypes') {
+            // 如果切换到智能文书页面，加载业务类型列表作为模板
+            if (sectionId === 'smartDocument') {
+                loadSmartDocBusinessTypes();
+            }
+            
+            // 如果切换到数据管理页面，加载数据状态和业务类型列表
+            if (sectionId === 'dataManagement') {
+                loadDataStatus();
                 listBusinessTypes();
             }
         }
@@ -384,7 +508,8 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    currentUploadedFile = data.filename;
+                    currentUploadedFile = data.saved_filename || data.filename;
+                    currentUploadedFilePath = data.file_path;
                     uploadResult.innerHTML = `<div class="success">上传成功！<br>文件名：${data.filename}<br>状态：${data.status}<br>识别到的实体：${JSON.stringify(data.entities)}<br>分割的块数：${data.chunks_count}</div>`;
                     
                     // 显示业务类型设置区域
@@ -422,6 +547,25 @@
             try {
                 saveResult.innerHTML = '<div>保存中...</div>';
                 
+                // 如果是自定义业务类型，先添加到业务类型列表
+                if (customBusinessType) {
+                    const addResponse = await fetch('/business-types', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: customBusinessType,
+                            description: ''
+                        })
+                    });
+                    
+                    if (!addResponse.ok) {
+                        // 如果添加失败（可能已存在），继续执行
+                        console.log('业务类型可能已存在，继续保存...');
+                    }
+                }
+                
                 const response = await fetch('/save-business-type', {
                     method: 'POST',
                     headers: {
@@ -430,13 +574,21 @@
                     body: JSON.stringify({
                         filename: currentUploadedFile,
                         business_type: selectedType,
-                        split: splitDocument
+                        split: splitDocument,
+                        file_path: currentUploadedFilePath
                     })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    saveResult.innerHTML = `<div class="success">保存成功！<br>文件名：${data.filename}<br>业务类型：${data.business_type}<br>拆分：${data.split ? '是' : '否'}</div>`;
+                    let mergeInfo = '';
+                    if (data.merged) {
+                        mergeInfo = `<br><strong style="color: #2196F3;">已融合 ${data.files_count} 个文件的模板</strong>`;
+                    }
+                    saveResult.innerHTML = `<div class="success">保存成功！<br>文件名：${data.filename}<br>业务类型：${data.business_type}<br>拆分：${data.split ? '是' : '否'}<br>变量数：${data.variable_count}<br>可复用部分：${data.reusable_count}${mergeInfo}</div>`;
+                    
+                    // 刷新业务类型列表
+                    loadBusinessTypes();
                 } else {
                     try {
                         const error = await response.json();
@@ -463,12 +615,14 @@
         }
         
         // 添加业务类型
-        document.getElementById('addBusinessTypeForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('businessTypeName').value;
-            const description = document.getElementById('businessTypeDesc').value;
+        async function addBusinessType() {
+            const name = document.getElementById('newBusinessTypeName').value;
             const addBusinessTypeResult = document.getElementById('addBusinessTypeResult');
+            
+            if (!name) {
+                addBusinessTypeResult.innerHTML = '<div class="error">请输入业务类型名称</div>';
+                return;
+            }
             
             try {
                 addBusinessTypeResult.innerHTML = '<div>添加中...</div>';
@@ -480,17 +634,16 @@
                     },
                     body: JSON.stringify({
                         name: name,
-                        description: description
+                        description: ''
                     })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    addBusinessTypeResult.innerHTML = `<div class="success">添加成功！<br>名称：${data.name}<br>描述：${data.description}</div>`;
+                    addBusinessTypeResult.innerHTML = `<div class="success">添加成功！<br>名称：${data.name}</div>`;
                     
-                    // 清空表单
-                    document.getElementById('businessTypeName').value = '';
-                    document.getElementById('businessTypeDesc').value = '';
+                    // 清空输入框
+                    document.getElementById('newBusinessTypeName').value = '';
                     
                     // 刷新列表
                     listBusinessTypes();
@@ -505,11 +658,16 @@
             } catch (error) {
                 addBusinessTypeResult.innerHTML = `<div class="error">添加失败：${error.message}<br>请确保后端服务器正在运行</div>`;
             }
-        });
+        }
         
         // 列出业务类型
         async function listBusinessTypes() {
-            const businessTypeList = document.getElementById('businessTypeList');
+            const businessTypeList = document.getElementById('businessTypesList');
+            
+            if (!businessTypeList) {
+                console.error('找不到业务类型列表元素');
+                return;
+            }
             
             try {
                 businessTypeList.innerHTML = '<div>加载中...</div>';
@@ -518,14 +676,15 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.business_types && data.business_types.length > 0) {
-                        let typesHTML = '<h3>业务类型列表：</h3>';
+                        let typesHTML = '<table style="width: 100%; border-collapse: collapse;">';
+                        typesHTML += '<tr style="background-color: #f5f5f5;"><th style="padding: 10px; border: 1px solid #ddd;">名称</th><th style="padding: 10px; border: 1px solid #ddd;">操作</th></tr>';
                         data.business_types.forEach(type => {
-                            typesHTML += `<div class="result-item">
-                                <strong>名称：</strong>${type.name}<br>
-                                <strong>描述：</strong>${type.description || '无'}<br>
-                                <button onclick="deleteBusinessType('${type.name}')">删除</button>
-                            </div>`;
+                            typesHTML += `<tr>`;
+                            typesHTML += `<td style="padding: 10px; border: 1px solid #ddd;">${type.name}</td>`;
+                            typesHTML += `<td style="padding: 10px; border: 1px solid #ddd;"><button onclick="deleteBusinessType('${type.name}')">删除</button></td>`;
+                            typesHTML += `</tr>`;
                         });
+                        typesHTML += '</table>';
                         businessTypeList.innerHTML = typesHTML;
                     } else {
                         businessTypeList.innerHTML = '<p>暂无业务类型</p>';
@@ -690,6 +849,593 @@
             } catch (error) {
                 queryResult.innerHTML = `<div class="error">查询失败：${error.message}<br>请确保后端服务器正在运行</div>`;
             }
+        });
+        
+        // 加载数据状态
+        async function loadDataStatus() {
+            const dataStatusDiv = document.getElementById('dataStatus');
+            dataStatusDiv.innerHTML = '<p>加载中...</p>';
+            
+            try {
+                const response = await fetch('/data-status');
+                const status = await response.json();
+                
+                let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">';
+                
+                // 向量存储状态
+                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
+                html += '<h4>向量存储</h4>';
+                html += `<p>文档数量: ${status.vector_store.document_count}</p>`;
+                html += `<p>文件数量: ${status.vector_store.files.length}</p>`;
+                html += '<ul>';
+                status.vector_store.files.forEach(file => {
+                    html += `<li>${file}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+                
+                // 知识图谱状态
+                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
+                html += '<h4>知识图谱</h4>';
+                html += `<p>实体数量: ${status.knowledge_graph.entity_count}</p>`;
+                html += `<p>关系数量: ${status.knowledge_graph.relation_count}</p>`;
+                html += `<p>文件数量: ${status.knowledge_graph.files.length}</p>`;
+                html += '<ul>';
+                status.knowledge_graph.files.forEach(file => {
+                    html += `<li>${file}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+                
+                // 业务类型状态
+                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
+                html += '<h4>业务类型</h4>';
+                html += `<p>类型数量: ${status.business_types.count}</p>`;
+                html += '<ul>';
+                status.business_types.types.forEach(type => {
+                    html += `<li>${type}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+                
+                // 文件映射状态
+                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
+                html += '<h4>文件业务类型映射</h4>';
+                html += `<p>映射数量: ${status.file_mappings.count}</p>`;
+                html += '<ul>';
+                status.file_mappings.files.forEach(file => {
+                    html += `<li>${file}</li>`;
+                });
+                html += '</ul>';
+                html += '</div>';
+                
+                html += '</div>';
+                
+                dataStatusDiv.innerHTML = html;
+                
+                // 更新删除文件下拉框
+                updateDeleteFilenameSelect(status);
+            } catch (error) {
+                dataStatusDiv.innerHTML = `<div class="error">加载数据状态失败：${error.message}</div>`;
+            }
+        }
+        
+        // 更新删除文件下拉框
+        function updateDeleteFilenameSelect(status) {
+            const deleteFilenameSelect = document.getElementById('deleteFilename');
+            deleteFilenameSelect.innerHTML = '<option value="">请选择要删除的文件</option>';
+            
+            const allFiles = new Set([
+                ...status.vector_store.files,
+                ...status.knowledge_graph.files,
+                ...status.file_mappings.files
+            ]);
+            
+            allFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                deleteFilenameSelect.appendChild(option);
+            });
+        }
+        
+        // 删除文件数据
+        async function deleteFileData() {
+            const deleteResultDiv = document.getElementById('deleteResult');
+            const filename = document.getElementById('deleteFilename').value;
+            const deleteVector = document.getElementById('deleteVector').checked;
+            const deleteKnowledgeGraph = document.getElementById('deleteKnowledgeGraph').checked;
+            const deleteNER = document.getElementById('deleteNER').checked;
+            
+            if (!filename) {
+                deleteResultDiv.innerHTML = '<div class="error">请选择要删除的文件</div>';
+                return;
+            }
+            
+            if (!deleteVector && !deleteKnowledgeGraph && !deleteNER) {
+                deleteResultDiv.innerHTML = '<div class="error">请至少选择一种数据类型进行删除</div>';
+                return;
+            }
+            
+            if (!confirm(`确定要删除文件 "${filename}" 的数据吗？此操作无法恢复！`)) {
+                return;
+            }
+            
+            deleteResultDiv.innerHTML = '<p>删除中...</p>';
+            
+            try {
+                const response = await fetch('/delete-file-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: filename,
+                        delete_vector: deleteVector,
+                        delete_knowledge_graph: deleteKnowledgeGraph,
+                        delete_ner: deleteNER
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    let html = '<div class="success">删除成功！</div>';
+                    html += '<div style="margin-top: 10px;">';
+                    html += `<p>${result.message}</p>`;
+                    html += '</div>';
+                    deleteResultDiv.innerHTML = html;
+                    
+                    // 刷新数据状态
+                    loadDataStatus();
+                } else {
+                    deleteResultDiv.innerHTML = `<div class="error">删除失败：${result.detail || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                deleteResultDiv.innerHTML = `<div class="error">删除失败：${error.message}</div>`;
+            }
+        }
+        
+        // 清空所有数据
+        async function clearAllData() {
+            const clearResultDiv = document.getElementById('clearResult');
+            
+            if (!confirm('确定要清空所有数据吗？此操作将删除所有向量存储、知识图谱、NER数据、业务类型和文件映射，且无法恢复！')) {
+                return;
+            }
+            
+            if (!confirm('再次确认：您确定要清空所有数据吗？此操作无法撤销！')) {
+                return;
+            }
+            
+            clearResultDiv.innerHTML = '<p>清空中...</p>';
+            
+            try {
+                const response = await fetch('/clear-all-data', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    let html = '<div class="success">清空成功！</div>';
+                    html += '<div style="margin-top: 10px;">';
+                    html += `<p>${result.message}</p>`;
+                    html += '</div>';
+                    clearResultDiv.innerHTML = html;
+                    
+                    // 刷新数据状态
+                    loadDataStatus();
+                } else {
+                    clearResultDiv.innerHTML = `<div class="error">清空失败：${result.detail || '未知错误'}</div>`;
+                }
+            } catch (error) {
+                clearResultDiv.innerHTML = `<div class="error">清空失败：${error.message}</div>`;
+            }
+        }
+        
+        // ==================== 智能文书生成功能 ====================
+        
+        let currentTemplateContent = '';
+        let currentTemplateAnalysis = null;
+        
+        // 分析文档内容
+        async function analyzeTemplateContent() {
+            const content = document.getElementById('templateContent').value;
+            
+            if (!content.trim()) {
+                alert('请输入文档内容');
+                return;
+            }
+            
+            const analysisResult = document.getElementById('templateAnalysisResult');
+            analysisResult.innerHTML = '<div>正在分析文档...</div>';
+            
+            try {
+                // 分析文档结构
+                const response = await fetch('/smart-templates/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({ content: content })
+                });
+                
+                if (response.ok) {
+                    const analysis = await response.json();
+                    currentTemplateAnalysis = analysis;
+                    currentTemplateContent = content;
+                    
+                    // 显示分析结果
+                    let html = '<h4>文档结构分析</h4>';
+                    html += `<p>段落数量：${analysis.paragraph_count}</p>`;
+                    
+                    if (analysis.variables && Object.keys(analysis.variables).length > 0) {
+                        html += '<h5>识别到的变量：</h5><ul>';
+                        for (const [type, values] of Object.entries(analysis.variables)) {
+                            html += `<li>${type}: ${values.slice(0, 3).join(', ')}${values.length > 3 ? '...' : ''}</li>`;
+                        }
+                        html += '</ul>';
+                    }
+                    
+                    html += '<h5>文档结构：</h5>';
+                    for (const para of analysis.structure.slice(0, 5)) {
+                        html += `<div style="margin: 5px 0; padding: 8px; background-color: ${para.has_variables ? '#fff3cd' : '#d4edda'}; border-radius: 4px;">`;
+                        html += `<strong>[${para.type}]</strong> ${para.content.substring(0, 50)}...`;
+                        if (para.has_variables) {
+                            html += ' <span style="color: #856404;">(包含变量)</span>';
+                        } else {
+                            html += ' <span style="color: #155724;">(可复用)</span>';
+                        }
+                        html += '</div>';
+                    }
+                    if (analysis.structure.length > 5) {
+                        html += `<p>...还有 ${analysis.structure.length - 5} 个段落</p>`;
+                    }
+                    
+                    analysisResult.innerHTML = html;
+                    
+                    // 显示创建模板的表单
+                    document.getElementById('templateCreateInfo').style.display = 'block';
+                } else {
+                    const error = await response.json();
+                    analysisResult.innerHTML = `<div class="error">分析失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                analysisResult.innerHTML = `<div class="error">分析失败：${error.message}</div>`;
+            }
+        }
+        
+        // 创建智能模板
+        async function createSmartTemplate() {
+            const templateName = document.getElementById('templateName').value;
+            const businessType = document.getElementById('templateBusinessType').value;
+            const resultDiv = document.getElementById('createTemplateResult');
+            
+            if (!templateName) {
+                resultDiv.innerHTML = '<div class="error">请输入模板名称</div>';
+                return;
+            }
+            
+            if (!currentTemplateContent) {
+                resultDiv.innerHTML = '<div class="error">请先上传文档</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div>正在创建模板...</div>';
+            
+            try {
+                const response = await fetch('/smart-templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        content: currentTemplateContent,
+                        template_name: templateName,
+                        business_type: businessType
+                    })
+                });
+                
+                if (response.ok) {
+                    const template = await response.json();
+                    resultDiv.innerHTML = `<div class="success">模板创建成功！<br>模板ID：${template.id}<br>变量数量：${template.variables.length}</div>`;
+                    
+                    // 刷新模板列表
+                    loadSmartDocBusinessTypes();
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">创建失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">创建失败：${error.message}</div>`;
+            }
+        }
+        
+        // 加载业务类型到下拉框（用于智能文书）
+        async function loadSmartDocBusinessTypes() {
+            const select = document.getElementById('selectBusinessType');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">请选择业务类型</option>';
+            
+            try {
+                // 获取已分析的文档列表
+                const response = await fetch('/document-analysis');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.analyses && data.analyses.length > 0) {
+                        for (const analysis of data.analyses) {
+                            select.innerHTML += `<option value="${analysis.business_type}">${analysis.business_type} (${analysis.variable_count}个变量)</option>`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('加载业务类型失败:', error);
+            }
+        }
+        
+        // 刷新业务类型列表
+        async function refreshBusinessTypesList() {
+            const resultDiv = document.getElementById('loadResult');
+            resultDiv.innerHTML = '<div>正在刷新...</div>';
+            
+            await loadSmartDocBusinessTypes();
+            
+            resultDiv.innerHTML = '<div class="success">列表已刷新</div>';
+        }
+        
+        // 全局变量存储分析结果
+        let currentAnalysis = null;
+        let currentVariableInputs = {};
+        let currentBusinessType = null;
+        // currentTemplateContent 已在上面声明
+        
+        // 加载业务类型的分析结果
+        async function loadBusinessTypeAnalysis() {
+            const businessType = document.getElementById('selectBusinessType').value;
+            const resultDiv = document.getElementById('loadResult');
+            
+            if (!businessType) {
+                document.getElementById('analysisResultSection').style.display = 'none';
+                document.getElementById('fillSection').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'none';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div>正在加载模板信息...</div>';
+            
+            try {
+                const response = await fetch(`/document-analysis/${encodeURIComponent(businessType)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentAnalysis = data.analysis;
+                    currentBusinessType = businessType;
+                    currentTemplateContent = data.content;
+                    
+                    // 显示模板信息
+                    const filesCount = data.files?.length || 1;
+                    const mergedInfo = data.merged ? ` (已融合 ${filesCount} 个文件)` : '';
+                    document.getElementById('sourceFilename').textContent = (data.filename || '-') + mergedInfo;
+                    document.getElementById('reusableCount').textContent = currentAnalysis.reusable_parts?.length || 0;
+                    document.getElementById('variableCount').textContent = currentAnalysis.variable_parts?.length || 0;
+                    
+                    // 显示分析结果
+                    displayAnalysisResult(currentAnalysis);
+                    
+                    resultDiv.innerHTML = '<div class="success">模板加载成功！</div>';
+                    
+                    // 显示分析结果区域
+                    document.getElementById('analysisResultSection').style.display = 'block';
+                    document.getElementById('analysisResultSection').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">加载失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">加载失败：${error.message}</div>`;
+            }
+        }
+        
+        // 显示AI分析结果
+        function displayAnalysisResult(analysis) {
+            // 显示可复用部分
+            const reusableList = document.getElementById('reusablePartsList');
+            if (analysis.reusable_parts && analysis.reusable_parts.length > 0) {
+                let html = '';
+                analysis.reusable_parts.forEach((part, index) => {
+                    html += `<div style="margin-bottom: 10px; padding: 10px; background-color: #fff; border-radius: 4px;">`;
+                    html += `<strong>${index + 1}. ${part.description || '可复用部分'}</strong>`;
+                    html += `<div style="margin-top: 5px; color: #666; font-size: 14px;">${part.content.substring(0, 100)}${part.content.length > 100 ? '...' : ''}</div>`;
+                    html += `</div>`;
+                });
+                reusableList.innerHTML = html;
+            } else {
+                reusableList.innerHTML = '<p style="color: #999;">未识别到可复用部分</p>';
+            }
+            
+            // 显示变量部分
+            const variableList = document.getElementById('variablePartsList');
+            if (analysis.variable_parts && analysis.variable_parts.length > 0) {
+                let html = '<table style="width: 100%; border-collapse: collapse;">';
+                html += '<tr style="background-color: #f5f5f5;"><th style="padding: 10px; border: 1px solid #ddd;">序号</th><th style="padding: 10px; border: 1px solid #ddd;">描述</th><th style="padding: 10px; border: 1px solid #ddd;">示例</th></tr>';
+                analysis.variable_parts.forEach((variable, index) => {
+                    html += `<tr>`;
+                    html += `<td style="padding: 10px; border: 1px solid #ddd;">${index + 1}</td>`;
+                    html += `<td style="padding: 10px; border: 1px solid #ddd;">${variable.description}</td>`;
+                    html += `<td style="padding: 10px; border: 1px solid #ddd; color: #999;">${variable.example || '-'}</td>`;
+                    html += `</tr>`;
+                });
+                html += '</table>';
+                variableList.innerHTML = html;
+            } else {
+                variableList.innerHTML = '<p style="color: #999;">未识别到需要填写的变量</p>';
+            }
+        }
+        
+        // 显示填写表单
+        function showFillForm() {
+            if (!currentAnalysis || !currentAnalysis.variable_parts) {
+                alert('请先分析文档');
+                return;
+            }
+            
+            const inputsDiv = document.getElementById('variableInputs');
+            currentVariableInputs = {};
+            
+            if (currentAnalysis.variable_parts.length > 0) {
+                let html = '';
+                currentAnalysis.variable_parts.forEach((variable, index) => {
+                    currentVariableInputs[variable.id] = variable;
+                    html += `<div class="form-group" style="margin-bottom: 15px;">`;
+                    html += `<label for="var_${variable.id}">${index + 1}. ${variable.description}</label>`;
+                    html += `<input type="text" id="var_${variable.id}" name="${variable.id}" placeholder="示例: ${variable.example || '请填写'}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">`;
+                    html += `</div>`;
+                });
+                inputsDiv.innerHTML = html;
+            } else {
+                inputsDiv.innerHTML = '<p style="color: #666;">该文档没有需要填写的变量，直接点击生成即可</p>';
+            }
+            
+            // 显示填写区域
+            document.getElementById('fillSection').style.display = 'block';
+            document.getElementById('fillSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 生成智能文书
+        async function generateSmartDocument() {
+            if (!currentAnalysis) {
+                alert('请先分析文档');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('generateResult');
+            const context = document.getElementById('generationContext').value;
+            
+            // 收集用户输入
+            const userInputs = {};
+            if (currentAnalysis.variable_parts) {
+                for (const variable of currentAnalysis.variable_parts) {
+                    const input = document.getElementById(`var_${variable.id}`);
+                    if (input) {
+                        userInputs[variable.id] = input.value.trim() || `[${variable.description}]`;
+                    }
+                }
+            }
+            
+            resultDiv.innerHTML = '<div>正在生成文书...</div>';
+            
+            try {
+                const response = await fetch('/document/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        analysis: currentAnalysis,
+                        user_inputs: userInputs,
+                        context: context
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // 显示生成的文档
+                    document.getElementById('generatedDocument').value = result.content;
+                    
+                    // 显示溯源信息
+                    const traceability = result.traceability;
+                    let traceHtml = `<p><strong>业务类型：</strong>${currentBusinessType}</p>`;
+                    traceHtml += `<p><strong>生成时间：</strong>${new Date(traceability.generated_at).toLocaleString()}</p>`;
+                    traceHtml += `<p><strong>可复用部分：</strong>${traceability.reusable_count} 个</p>`;
+                    traceHtml += `<p><strong>填写变量：</strong>${traceability.variable_count} 个</p>`;
+                    traceHtml += '<p><strong>填写内容：</strong></p><ul>';
+                    for (const [key, value] of Object.entries(traceability.user_inputs)) {
+                        traceHtml += `<li><strong>${key}:</strong> ${value}</li>`;
+                    }
+                    traceHtml += '</ul>';
+                    document.getElementById('traceabilityContent').innerHTML = traceHtml;
+                    
+                    // 显示结果区域
+                    document.getElementById('resultSection').style.display = 'block';
+                    resultDiv.innerHTML = '<div class="success">文书生成成功！</div>';
+                    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">生成失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">生成失败：${error.message}</div>`;
+            }
+        }
+        
+        // 重置智能文书表单
+        function resetSmartDocumentForm() {
+            document.getElementById('selectBusinessType').value = '';
+            document.getElementById('loadResult').innerHTML = '';
+            document.getElementById('analysisResultSection').style.display = 'none';
+            document.getElementById('fillSection').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('generatedDocument').value = '';
+            document.getElementById('traceabilityContent').innerHTML = '';
+            document.getElementById('generationContext').value = '';
+            currentAnalysis = null;
+            currentVariableInputs = {};
+            currentBusinessType = null;
+            currentTemplateContent = null;
+            
+            // 滚动到顶部
+            document.getElementById('docInputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 保存生成的文档
+        function saveGeneratedDocument() {
+            const content = document.getElementById('generatedDocument').value;
+            const businessType = currentBusinessType || '文书';
+            
+            if (!content) {
+                alert('没有内容可保存');
+                return;
+            }
+            
+            // 创建并下载文件
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${businessType}_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 删除智能模板
+        async function deleteSmartTemplate(templateId) {
+            if (!confirm('确定要删除这个模板吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/smart-templates/${templateId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadSmartDocBusinessTypes();
+                } else {
+                    alert('删除失败');
+                }
+            } catch (error) {
+                alert('删除失败：' + error.message);
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBusinessTypes();
+            loadSmartDocBusinessTypes();
         });
     </script>
 </body>

@@ -91,6 +91,7 @@ class TfidfVectorStore:
             pickle.dump(self.page_info, f)
         
         if self.index is not None:
+            import faiss
             faiss.write_index(self.index, os.path.join(save_path, 'index.faiss'))
     
     def load(self, load_path):
