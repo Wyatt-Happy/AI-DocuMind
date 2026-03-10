@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能档案系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .nav button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-radius: 4px;
+        }
+        
+        .nav button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .section {
+            display: none;
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        h2 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="text"],
+        input[type="file"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #0069d9;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .result h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+        
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+        }
+        
+        .info {
+            color: #17a2b8;
+            margin-top: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .timeline {
+            border-left: 3px solid #007bff;
+            padding-left: 20px;
+            margin-top: 20px;
+        }
+        
+        .timeline-item {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 5px;
+            width: 10px;
+            height: 10px;
+            background-color: #007bff;
+            border-radius: 50%;
+        }
+        
+        .timeline-date {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-content {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .source-tag {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI智能档案系统</h1>
+        
+        <!-- 导航栏 -->
+        <div class="nav">
+            <button class="active" onclick="showSection('upload')">文件上传</button>
+            <button onclick="showSection('businessTypes')">业务类型管理</button>
+            <button onclick="showSection('qa')">智能问答</button>
+            <button onclick="showSection('query')">人员查询</button>
+        </div>
+        
+        <!-- 文件上传区域 -->
+        <div id="upload" class="section active">
+            <h2>文件上传</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="file">选择文件（支持 .docx 和 .pdf）</label>
+                    <input type="file" id="file" name="file" accept=".docx,.pdf" required>
+                </div>
+                <button type="submit">上传文件</button>
+                <div id="uploadResult"></div>
+            </form>
+            
+            <div id="businessTypeSection" style="display: none; margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>设置业务类型</h3>
+                <div class="form-group">
+                    <label for="businessType">业务类型</label>
+                    <select id="businessType" name="businessType">
+                        <option value="">请选择业务类型</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customBusinessType">或输入自定义业务类型</label>
+                    <input type="text" id="customBusinessType" name="customBusinessType" placeholder="例如：刑事案件">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="splitDocument" name="splitDocument">
+                        拆分文档
+                    </label>
+                </div>
+                <button type="button" onclick="saveBusinessType()">保存</button>
+                <button type="button" onclick="resetUploadForm()">重新上传</button>
+                <div id="saveResult"></div>
+            </div>
+        </div>
+        
+        <!-- 业务类型管理区域 -->
+        <div id="businessTypes" class="section">
+            <h2>业务类型管理</h2>
+            <div class="grid">
+                <div>
+                    <h3>添加业务类型</h3>
+                    <form id="addBusinessTypeForm">
+                        <div class="form-group">
+                            <label for="businessTypeName">业务类型名称</label>
+                            <input type="text" id="businessTypeName" name="name" placeholder="例如：刑事案件" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="businessTypeDesc">描述</label>
+                            <textarea id="businessTypeDesc" name="description" placeholder="例如：刑事案件相关的档案"></textarea>
+                        </div>
+                        <button type="submit">添加</button>
+                        <div id="addBusinessTypeResult"></div>
+                    </form>
+                </div>
+                <div>
+                    <h3>业务类型列表</h3>
+                    <button onclick="listBusinessTypes()">刷新列表</button>
+                    <div id="businessTypeList" class="result"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 智能问答区域 -->
+        <div id="qa" class="section">
+            <h2>智能问答</h2>
+            <form id="qaForm">
+                <div class="form-group">
+                    <label for="question">问题</label>
+                    <textarea id="question" name="question" placeholder="例如：张三怎么了？" required></textarea>
+                </div>
+                <button type="submit">提交问题</button>
+                <div id="qaResult"></div>
+            </form>
+        </div>
+        
+        <!-- 人员查询区域 -->
+        <div id="query" class="section">
+            <h2>人员查询</h2>
+            <form id="queryForm">
+                <div class="form-group">
+                    <label for="queryPerson">人员姓名</label>
+                    <input type="text" id="queryPerson" name="person" placeholder="例如：张三" required>
+                </div>
+                <button type="submit">查询</button>
+                <div id="queryResult"></div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let currentUploadedFile = null;
+        
+        // 显示指定区域
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav button').forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 如果切换到文件上传页面，加载业务类型列表
+            if (sectionId === 'upload') {
+                loadBusinessTypes();
+            }
+            
+            // 如果切换到业务类型管理页面，加载业务类型列表
+            if (sectionId === 'businessTypes') {
+                listBusinessTypes();
+            }
+        }
+        
+        // 加载业务类型列表到下拉框
+        async function loadBusinessTypes() {
+            const businessTypeSelect = document.getElementById('businessType');
+            
+            try {
+                const response = await fetch('/business-types');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.business_types && data.business_types.length > 0) {
+                        businessTypeSelect.innerHTML = '<option value="">请选择业务类型</option>';
+                        data.business_types.forEach(type => {
+                            businessTypeSelect.innerHTML += `<option value="${type.name}">${type.name}</option>`;
+                        });
+                    } else {
+                        businessTypeSelect.innerHTML = '<option value="">暂无业务类型，请先添加</option>';
+                    }
+                } else {
+                    businessTypeSelect.innerHTML = '<option value="">加载失败</option>';
+                }
+            } catch (error) {
+                businessTypeSelect.innerHTML = '<option value="">加载失败</option>';
+            }
+        }
+        
+        // 上传文件
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
+            const uploadResult = document.getElementById('uploadResult');
+            
+            if (!file) {
+                uploadResult.innerHTML = '<div class="error">请选择文件</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                uploadResult.innerHTML = '<div>上传中...</div>';
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUploadedFile = data.filename;
+                    uploadResult.innerHTML = `<div class="success">上传成功！<br>文件名：${data.filename}<br>状态：${data.status}<br>识别到的实体：${JSON.stringify(data.entities)}<br>分割的块数：${data.chunks_count}</div>`;
+                    
+                    // 显示业务类型设置区域
+                    document.getElementById('businessTypeSection').style.display = 'block';
+                    
+                    // 加载业务类型列表
+                    loadBusinessTypes();
+                } else {
+                    try {
+                        const error = await response.json();
+                        uploadResult.innerHTML = `<div class="error">上传失败：${error.detail}</div>`;
+                    } catch {
+                        uploadResult.innerHTML = `<div class="error">上传失败：服务器返回错误</div>`;
+                    }
+                }
+            } catch (error) {
+                uploadResult.innerHTML = `<div class="error">上传失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        });
+        
+        // 保存业务类型
+        async function saveBusinessType() {
+            const businessType = document.getElementById('businessType').value;
+            const customBusinessType = document.getElementById('customBusinessType').value;
+            const splitDocument = document.getElementById('splitDocument').checked;
+            const saveResult = document.getElementById('saveResult');
+            
+            const selectedType = customBusinessType || businessType;
+            
+            if (!selectedType) {
+                saveResult.innerHTML = '<div class="error">请选择或输入业务类型</div>';
+                return;
+            }
+            
+            try {
+                saveResult.innerHTML = '<div>保存中...</div>';
+                
+                const response = await fetch('/save-business-type', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filename: currentUploadedFile,
+                        business_type: selectedType,
+                        split: splitDocument
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    saveResult.innerHTML = `<div class="success">保存成功！<br>文件名：${data.filename}<br>业务类型：${data.business_type}<br>拆分：${data.split ? '是' : '否'}</div>`;
+                } else {
+                    try {
+                        const error = await response.json();
+                        saveResult.innerHTML = `<div class="error">保存失败：${error.detail}</div>`;
+                    } catch {
+                        saveResult.innerHTML = `<div class="error">保存失败：服务器返回错误</div>`;
+                    }
+                }
+            } catch (error) {
+                saveResult.innerHTML = `<div class="error">保存失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        }
+        
+        // 重置上传表单
+        function resetUploadForm() {
+            document.getElementById('file').value = '';
+            document.getElementById('businessType').value = '';
+            document.getElementById('customBusinessType').value = '';
+            document.getElementById('splitDocument').checked = false;
+            document.getElementById('uploadResult').innerHTML = '';
+            document.getElementById('saveResult').innerHTML = '';
+            document.getElementById('businessTypeSection').style.display = 'none';
+            currentUploadedFile = null;
+        }
+        
+        // 添加业务类型
+        document.getElementById('addBusinessTypeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('businessTypeName').value;
+            const description = document.getElementById('businessTypeDesc').value;
+            const addBusinessTypeResult = document.getElementById('addBusinessTypeResult');
+            
+            try {
+                addBusinessTypeResult.innerHTML = '<div>添加中...</div>';
+                
+                const response = await fetch('/business-types', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addBusinessTypeResult.innerHTML = `<div class="success">添加成功！<br>名称：${data.name}<br>描述：${data.description}</div>`;
+                    
+                    // 清空表单
+                    document.getElementById('businessTypeName').value = '';
+                    document.getElementById('businessTypeDesc').value = '';
+                    
+                    // 刷新列表
+                    listBusinessTypes();
+                } else {
+                    try {
+                        const error = await response.json();
+                        addBusinessTypeResult.innerHTML = `<div class="error">添加失败：${error.detail}</div>`;
+                    } catch {
+                        addBusinessTypeResult.innerHTML = `<div class="error">添加失败：服务器返回错误</div>`;
+                    }
+                }
+            } catch (error) {
+                addBusinessTypeResult.innerHTML = `<div class="error">添加失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        });
+        
+        // 列出业务类型
+        async function listBusinessTypes() {
+            const businessTypeList = document.getElementById('businessTypeList');
+            
+            try {
+                businessTypeList.innerHTML = '<div>加载中...</div>';
+                const response = await fetch('/business-types');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.business_types && data.business_types.length > 0) {
+                        let typesHTML = '<h3>业务类型列表：</h3>';
+                        data.business_types.forEach(type => {
+                            typesHTML += `<div class="result-item">
+                                <strong>名称：</strong>${type.name}<br>
+                                <strong>描述：</strong>${type.description || '无'}<br>
+                                <button onclick="deleteBusinessType('${type.name}')">删除</button>
+                            </div>`;
+                        });
+                        businessTypeList.innerHTML = typesHTML;
+                    } else {
+                        businessTypeList.innerHTML = '<p>暂无业务类型</p>';
+                    }
+                } else {
+                    try {
+                        const error = await response.json();
+                        businessTypeList.innerHTML = `<div class="error">获取失败：${error.detail}</div>`;
+                    } catch {
+                        businessTypeList.innerHTML = `<div class="error">获取失败：服务器返回错误</div>`;
+                    }
+                }
+            } catch (error) {
+                businessTypeList.innerHTML = `<div class="error">获取失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        }
+        
+        // 删除业务类型
+        async function deleteBusinessType(name) {
+            if (!confirm(`确定要删除业务类型"${name}"吗？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/business-types/${encodeURIComponent(name)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('删除成功！');
+                    listBusinessTypes();
+                } else {
+                    try {
+                        const error = await response.json();
+                        alert(`删除失败：${error.detail}`);
+                    } catch {
+                        alert('删除失败：服务器返回错误');
+                    }
+                }
+            } catch (error) {
+                alert(`删除失败：${error.message}`);
+            }
+        }
+        
+        // 智能问答
+        document.getElementById('qaForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const question = document.getElementById('question').value;
+            const qaResult = document.getElementById('qaResult');
+            
+            try {
+                qaResult.innerHTML = '<div>处理中...</div>';
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 提取溯源信息
+                    const answerText = data.answer;
+                    const sourceMatch = answerText.match(/信息来源：([\s\S]+)$/);
+                    const answerWithoutSource = sourceMatch ? answerText.substring(0, sourceMatch.index) : answerText;
+                    const sourceText = sourceMatch ? sourceMatch[1] : '';
+                    
+                    let sourceHTML = '';
+                    if (sourceText) {
+                        const sourceLines = sourceText.split('\n').filter(line => line.trim());
+                        sourceHTML = '<div class="result"><h3>溯源：</h3>';
+                        sourceLines.forEach(line => {
+                            sourceHTML += `<div class="source-tag">${line.trim()}</div>`;
+                        });
+                        sourceHTML += '</div>';
+                    }
+                    
+                    qaResult.innerHTML = `
+                        <div class="result">
+                            <h3>回答：</h3>
+                            <div class="result-item">${answerWithoutSource}</div>
+                        </div>
+                        ${sourceHTML}
+                    `;
+                } else {
+                    try {
+                        const error = await response.json();
+                        qaResult.innerHTML = `<div class="error">处理失败：${error.detail}</div>`;
+                    } catch {
+                        qaResult.innerHTML = `<div class="error">处理失败：服务器返回错误</div>`;
+                    }
+                }
+            } catch (error) {
+                qaResult.innerHTML = `<div class="error">处理失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        });
+        
+        // 人员查询
+        document.getElementById('queryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const person = document.getElementById('queryPerson').value;
+            const queryResult = document.getElementById('queryResult');
+            
+            try {
+                queryResult.innerHTML = '<div>查询中...</div>';
+                
+                // 并行查询人员履历和时间轴
+                const [queryResponse, timelineResponse] = await Promise.all([
+                    fetch(`/query?person_id=${encodeURIComponent(person)}&query=${encodeURIComponent('履历')}`),
+                    fetch(`/timeline/${encodeURIComponent(person)}`)
+                ]);
+                
+                let queryHTML = '';
+                let timelineHTML = '';
+                
+                // 处理人员履历查询结果
+                if (queryResponse.ok) {
+                    const data = await queryResponse.json();
+                    if (data.results && data.results.length > 0) {
+                        queryHTML = '<div class="result"><h3>人员履历：</h3>';
+                        data.results.forEach((result, index) => {
+                            queryHTML += `<div class="result-item">${index + 1}. ${result.content}</div>`;
+                        });
+                        queryHTML += '</div>';
+                    } else {
+                        queryHTML = '<div class="result"><h3>人员履历：</h3><p>未找到相关履历</p></div>';
+                    }
+                } else {
+                    queryHTML = '<div class="result"><h3>人员履历：</h3><p>查询失败</p></div>';
+                }
+                
+                // 处理时间轴查询结果
+                if (timelineResponse.ok) {
+                    const data = await timelineResponse.json();
+                    if (data.timeline && data.timeline.length > 0) {
+                        timelineHTML = '<div class="timeline">';
+                        data.timeline.forEach(event => {
+                            timelineHTML += `
+                                <div class="timeline-item">
+                                    <div class="timeline-date">${event.time || event.date}</div>
+                                    <div class="timeline-content">
+                                        <strong>${event.event_type || event.event}</strong><br>
+                                        ${event.content || ''}<br>
+                                        <span class="source-tag">来源：${event.source}（页码：${event.page}）</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        timelineHTML += '</div>';
+                    } else {
+                        timelineHTML = '<div class="result"><h3>时间轴：</h3><p>未找到相关事件</p></div>';
+                    }
+                } else {
+                    timelineHTML = '<div class="result"><h3>时间轴：</h3><p>生成失败</p></div>';
+                }
+                
+                queryResult.innerHTML = queryHTML + timelineHTML;
+            } catch (error) {
+                queryResult.innerHTML = `<div class="error">查询失败：${error.message}<br>请确保后端服务器正在运行</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

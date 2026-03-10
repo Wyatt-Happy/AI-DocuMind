@@ -1,0 +1,60 @@
+{
+  "id": "template_1",
+  "name": "案件受理通知书",
+  "description": "案件受理通知书模板",
+  "content": "{{ title }}\n\n尊敬的{{ party_name }}：\n\n您于{{ submit_date }}提交的关于{{ case_type }}的案件材料已收悉。经审查，符合受理条件，现决定予以受理。\n\n案件编号：{{ case_number }}\n受理日期：{{ accept_date }}\n承办人：{{ handler_name }}\n联系电话：{{ contact_phone }}\n\n特此通知。\n\n{{ organization }}\n{{ date }}\n",
+  "fields": [
+    {
+      "name": "title",
+      "label": "标题",
+      "type": "text",
+      "default": "案件受理通知书"
+    },
+    {
+      "name": "party_name",
+      "label": "当事人姓名",
+      "type": "text"
+    },
+    {
+      "name": "submit_date",
+      "label": "提交日期",
+      "type": "date"
+    },
+    {
+      "name": "case_type",
+      "label": "案件类型",
+      "type": "text"
+    },
+    {
+      "name": "case_number",
+      "label": "案件编号",
+      "type": "text"
+    },
+    {
+      "name": "accept_date",
+      "label": "受理日期",
+      "type": "date"
+    },
+    {
+      "name": "handler_name",
+      "label": "承办人",
+      "type": "text"
+    },
+    {
+      "name": "contact_phone",
+      "label": "联系电话",
+      "type": "text"
+    },
+    {
+      "name": "organization",
+      "label": "组织机构",
+      "type": "text",
+      "default": "某某单位"
+    },
+    {
+      "name": "date",
+      "label": "日期",
+      "type": "date"
+    }
+  ]
+}

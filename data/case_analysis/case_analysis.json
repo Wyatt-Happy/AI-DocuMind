@@ -1,0 +1,85 @@
+{
+  "yearly_trends": [
+    {
+      "year": "1997",
+      "count": 2
+    },
+    {
+      "year": "2024",
+      "count": 8
+    },
+    {
+      "year": "2025",
+      "count": 7
+    },
+    {
+      "year": "2027",
+      "count": 1
+    }
+  ],
+  "case_type_trends": [
+    {
+      "case_type": "案件",
+      "count": 31,
+      "percentage": 86.11
+    },
+    {
+      "case_type": "刑事案件",
+      "count": 16,
+      "percentage": 44.44
+    },
+    {
+      "case_type": "行政案件",
+      "count": 12,
+      "percentage": 33.33
+    },
+    {
+      "case_type": "诉讼",
+      "count": 8,
+      "percentage": 22.22
+    }
+  ],
+  "party_activity": [
+    {
+      "party": "的案件作为定案",
+      "count": 4
+    },
+    {
+      "party": "明确申请上述鉴定意见",
+      "count": 4
+    },
+    {
+      "party": "承担举证不",
+      "count": 4
+    },
+    {
+      "party": "制作",
+      "count": 4
+    },
+    {
+      "party": "吊销机动车驾驶证行政",
+      "count": 4
+    },
+    {
+      "party": "罚款的行政处罚",
+      "count": 4
+    },
+    {
+      "party": "进行了询问",
+      "count": 4
+    },
+    {
+      "party": "违法事实后",
+      "count": 4
+    },
+    {
+      "party": "拟作出的行政处罚的事",
+      "count": 4
+    },
+    {
+      "party": "认定申请人实施醉酒驾",
+      "count": 4
+    }
+  ],
+  "total_cases": 36
+}

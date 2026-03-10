@@ -1,0 +1,103 @@
+{
+  "id": "template_2",
+  "name": "调查笔录",
+  "description": "调查笔录模板",
+  "content": "调查笔录\n\n时间：{{ date }} {{ time }}\n地点：{{ location }}\n调查人：{{ investigators }}\n记录人：{{ recorder }}\n被调查人：{{ interviewee_name }}\n性别：{{ interviewee_gender }}\n年龄：{{ interviewee_age }}\n职业：{{ interviewee_occupation }}\n联系电话：{{ interviewee_phone }}\n\n问：{{ question1 }}\n答：{{ answer1 }}\n\n问：{{ question2 }}\n答：{{ answer2 }}\n\n问：{{ question3 }}\n答：{{ answer3 }}\n\n以上记录经被调查人核对无误。\n\n被调查人（签字）：{{ interviewee_signature }}\n调查人（签字）：{{ investigators_signature }}\n记录人（签字）：{{ recorder_signature }}\n",
+  "fields": [
+    {
+      "name": "date",
+      "label": "日期",
+      "type": "date"
+    },
+    {
+      "name": "time",
+      "label": "时间",
+      "type": "text"
+    },
+    {
+      "name": "location",
+      "label": "地点",
+      "type": "text"
+    },
+    {
+      "name": "investigators",
+      "label": "调查人",
+      "type": "text"
+    },
+    {
+      "name": "recorder",
+      "label": "记录人",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_name",
+      "label": "被调查人姓名",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_gender",
+      "label": "性别",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_age",
+      "label": "年龄",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_occupation",
+      "label": "职业",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_phone",
+      "label": "联系电话",
+      "type": "text"
+    },
+    {
+      "name": "question1",
+      "label": "问题1",
+      "type": "text"
+    },
+    {
+      "name": "answer1",
+      "label": "回答1",
+      "type": "text"
+    },
+    {
+      "name": "question2",
+      "label": "问题2",
+      "type": "text"
+    },
+    {
+      "name": "answer2",
+      "label": "回答2",
+      "type": "text"
+    },
+    {
+      "name": "question3",
+      "label": "问题3",
+      "type": "text"
+    },
+    {
+      "name": "answer3",
+      "label": "回答3",
+      "type": "text"
+    },
+    {
+      "name": "interviewee_signature",
+      "label": "被调查人签字",
+      "type": "text"
+    },
+    {
+      "name": "investigators_signature",
+      "label": "调查人签字",
+      "type": "text"
+    },
+    {
+      "name": "recorder_signature",
+      "label": "记录人签字",
+      "type": "text"
+    }
+  ]
+}
