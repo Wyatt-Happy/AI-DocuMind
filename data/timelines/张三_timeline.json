@@ -1,1 +1,206 @@
-[]
+[
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "XX 省XX 市XX 区人民检察院\n取保候审决定书\n（副本）\n××检××保〔20××〕×号\n犯罪嫌疑人张三因涉嫌盗窃罪，根据《中华人民共和国刑事\n诉讼法》第六十七条的规定，本院决定对其取保候审，由保证人\n/由犯罪嫌疑人交纳保证金（大写）贰仟伍佰整元担保，期限从\n年5 月27 日起算，并由\nXX 市公安局XX 区分局执行",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "局执行"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "湖北省武汉东湖新技术开发区人民检察院\n取保候审执行通知书\n××检××保〔20××〕×号\n犯罪嫌疑人张三因涉嫌盗窃罪，根据《中华人民共和国刑\n事诉讼法》第六十七条的规定，本院决定对其取保候审，保证人\n已向本院出具保证书/犯罪嫌疑人已交纳保证金（大写）贰仟伍\n佰元，期限从\n2027\n年5 月27 日起算",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "project",
+    "content": "此致\nXX 市公安局XX 区分局\n2027 年5 月27 日\n注：犯罪嫌疑人张三性别男性出生日期2027 年5 月10 日\n公民身份号码1234567891234567 工作单位XX 有限公司\n住址XX 省XX 市XX 区XX 大厦联系方式12345678912\n第二联送达执行机关",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "湖北省武汉东湖新技术开发区人民检察院\n取保候审执行通知书\n（回执）\nXX 省XX 市XX 区\n人民检察院：\n你院2027 年5 月27 日以××检××保〔20××〕×号\n取保候审决定书决定取保候审的犯罪嫌疑人张三已于2027\n年5 月\n27 日，由XX 市公安局XX 区分局执行取保候审",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 3,
+    "related_entities": {
+      "organizations": [
+        "局执行取保候审"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "project",
+    "content": "XX 市公安局XX 区分局\n起诉意见书\nXX 公诉字[2027]X 号\n犯罪嫌疑人：张三，男，1982 年1 月32 日，汉族，文化程度：\n高中学历，公民身份证号码：421821198201301234，工作单位：无，\n政治面貌：群众，户籍所在地：XX 省XX 市，现住地址：XX 省XX 市\nXX 镇XX 村XX 号，联系方式：12345678912",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "2027 年8 月18 日，张\n三因涉嫌盗窃罪被XX 市公安局XX 区分局刑事拘留，2027 年9 月12\n日，XX 区人民检察院审查认为：无社会危险性，决定不予批准张三",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "局刑事拘留"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "2027 年9 月12 日，XX 市公安局XX 区分局对犯罪嫌疑人张三变更强\n制措施为取保候审",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "局对犯罪嫌疑人张三变更"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "张三无违法犯罪前科",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "犯罪嫌疑人张三涉嫌盗窃一案，由我局于2027 年8 月3 日接到\n李四报案，我局于2027 年8 月3 日受案调查，8 月7 日依法立案侦\n查",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "2027 年8 月7 日，我局民警在XX 市XX 区XX 村抓获涉嫌盗窃的\n犯罪嫌疑人张三",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "局民警在"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "经依法侦查查明：2027 年8 月7 日，我局民警将犯罪嫌疑人张\n三传唤至XX 派出所配合调查，犯罪嫌疑人张三如实供述其在2027\n年8 月9 日上午3 时许，在XX 市XX 区XX 路XX 巷子时，趁无人之\n机，将停放在此处李四的一辆号牌为XX 号两轮踏板摩托车盗走，将\n摩托车号牌拆下藏匿在摩托车座椅下储物箱内，车辆供自己使用",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "处李四的一辆号牌为",
+        "局民警将犯罪嫌疑人张"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "犯罪嫌疑人张三到案后，在接受公安机关审查期间表现良好，其\n如实供述了自己的犯罪事实，对自己的犯罪行为供认不讳，认罪认罚",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "综上所述，犯罪嫌疑人张三的行为触犯了《中华人民共和国刑法》\n第二百六十四条之规定，涉嫌盗窃罪，现双方已达成赔偿谅解，依照\n《中华人民共和国刑事诉讼法》第一百六十二条之规定，现将此案移\n送审查起诉",
+    "source": "XX市公安局XX区分局起诉意见书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "XX 省XX 市XX 区人民检察院\n取保候审决定书\n（副本）\n××检××保〔20××〕×号\n犯罪嫌疑人张三因涉嫌盗窃罪，根据《中华人民共和国刑事\n诉讼法》第六十七条的规定，本院决定对其取保候审，由保证人\n/由犯罪嫌疑人交纳保证金（大写）贰仟伍佰整元担保，期限从\n年5 月27 日起算，并由\nXX 市公安局XX 区分局执行",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 1,
+    "related_entities": {
+      "organizations": [
+        "局执行"
+      ],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "湖北省武汉东湖新技术开发区人民检察院\n取保候审执行通知书\n××检××保〔20××〕×号\n犯罪嫌疑人张三因涉嫌盗窃罪，根据《中华人民共和国刑\n事诉讼法》第六十七条的规定，本院决定对其取保候审，保证人\n已向本院出具保证书/犯罪嫌疑人已交纳保证金（大写）贰仟伍\n佰元，期限从\n2027\n年5 月27 日起算",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "project",
+    "content": "此致\nXX 市公安局XX 区分局\n2027 年5 月27 日\n注：犯罪嫌疑人张三性别男性出生日期2027 年5 月10 日\n公民身份号码1234567891234567 工作单位XX 有限公司\n住址XX 省XX 市XX 区XX 大厦联系方式12345678912\n第二联送达执行机关",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 2,
+    "related_entities": {
+      "organizations": [],
+      "positions": []
+    }
+  },
+  {
+    "time": "",
+    "event_type": "other",
+    "content": "湖北省武汉东湖新技术开发区人民检察院\n取保候审执行通知书\n（回执）\nXX 省XX 市XX 区\n人民检察院：\n你院2027 年5 月27 日以××检××保〔20××〕×号\n取保候审决定书决定取保候审的犯罪嫌疑人张三已于2027\n年5 月\n27 日，由XX 市公安局XX 区分局执行取保候审",
+    "source": "XX省XX市XX区人民检察院取保候审决定书.pdf",
+    "page": 3,
+    "related_entities": {
+      "organizations": [
+        "局执行取保候审"
+      ],
+      "positions": []
+    }
+  }
+]

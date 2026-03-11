@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI智能档案系统</title>
+    <script src="/static/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -211,11 +212,12 @@
         
         <!-- 导航栏 -->
         <div class="nav">
-            <button class="active" onclick="showSection('upload')">文件上传</button>
-            <button onclick="showSection('qa')">智能问答</button>
-            <button onclick="showSection('query')">人员查询</button>
-            <button onclick="showSection('smartDocument')">智能文书</button>
-            <button onclick="showSection('dataManagement')">数据管理</button>
+            <button class="active" onclick="showSection('upload', event)">文件上传</button>
+            <button onclick="showSection('qa', event)">智能问答</button>
+            <button onclick="showSection('smartDocument', event)">智能文书</button>
+            <button onclick="showSection('caseAnalysis', event)">案件统计分析</button>
+            <button onclick="showSection('personQuery', event)">人员查询</button>
+            <button onclick="showSection('dataManagement', event)">数据管理</button>
         </div>
         
         <!-- 文件上传区域 -->
@@ -230,28 +232,7 @@
                 <div id="uploadResult"></div>
             </form>
             
-            <div id="businessTypeSection" style="display: none; margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>设置业务类型</h3>
-                <div class="form-group">
-                    <label for="businessType">业务类型</label>
-                    <select id="businessType" name="businessType">
-                        <option value="">请选择业务类型</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="customBusinessType">或输入自定义业务类型</label>
-                    <input type="text" id="customBusinessType" name="customBusinessType" placeholder="例如：刑事案件">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="splitDocument" name="splitDocument">
-                        拆分文档
-                    </label>
-                </div>
-                <button type="button" onclick="saveBusinessType()">保存</button>
-                <button type="button" onclick="resetUploadForm()">重新上传</button>
-                <div id="saveResult"></div>
-            </div>
+
         </div>
         
         <!-- 智能问答区域 -->
@@ -267,93 +248,228 @@
             </form>
         </div>
         
-        <!-- 人员查询区域 -->
-        <div id="query" class="section">
-            <h2>人员查询</h2>
-            <form id="queryForm">
-                <div class="form-group">
-                    <label for="queryPerson">人员姓名</label>
-                    <input type="text" id="queryPerson" name="person" placeholder="例如：张三" required>
-                </div>
-                <button type="submit">查询</button>
-                <div id="queryResult"></div>
-            </form>
-        </div>
+
         
-        <!-- 智能文书生成区域 -->
+        <!-- 智能文书生成区域（新版 - 手动模板管理） -->
         <div id="smartDocument" class="section">
             <h2>智能文书生成</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                从模板库中选择文书模板，系统自动识别可复用和需填写部分，快速生成新文书。
+                <br><small>提示：将模板文件放入 templates/documents 文件夹即可自动识别</small>
+            </p>
             
-            <!-- 步骤1：选择业务类型 -->
-            <div id="docInputSection" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>步骤1：选择业务类型</h3>
-                <p style="color: #666; margin-bottom: 15px;">选择已上传并分析过的业务类型，系统将自动加载模板结构</p>
+            <!-- 步骤1：选择模板 -->
+            <div id="templateSelectSection" style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>步骤1：选择模板</h3>
                 
                 <div class="form-group">
-                    <label for="selectBusinessType">业务类型</label>
-                    <select id="selectBusinessType" onchange="loadBusinessTypeAnalysis()">
-                        <option value="">请选择业务类型</option>
+                    <label for="manualTemplateSelect">文书模板</label>
+                    <select id="manualTemplateSelect" onchange="onManualTemplateChange()">
+                        <option value="">请选择模板</option>
                     </select>
                 </div>
                 
-                <button type="button" onclick="refreshBusinessTypesList()">刷新列表</button>
-                <div id="loadResult" style="margin-top: 15px;"></div>
+                <button type="button" onclick="refreshManualTemplates()">刷新模板列表</button>
+                <button type="button" onclick="analyzeSelectedTemplate()" id="analyzeBtn" style="display: none; margin-left: 10px;">解析模板</button>
+                
+                <div id="templateInfoDisplay" style="margin-top: 15px; padding: 15px; background-color: #f0f8ff; border-radius: 8px; display: none;">
+                    <p><strong>文件名：</strong><span id="templateFilename">-</span></p>
+                    <p><strong>状态：</strong><span id="templateStatus">-</span></p>
+                    <p><strong>文件大小：</strong><span id="templateSize">-</span></p>
+                    <p><strong>修改时间：</strong><span id="templateModified">-</span></p>
+                </div>
+                
+                <div id="templateSelectResult" style="margin-top: 15px;"></div>
             </div>
             
-            <!-- 步骤2：模板信息展示 -->
-            <div id="analysisResultSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>步骤2：模板信息</h3>
+            <!-- 步骤2：模板结构展示（解析后显示） -->
+            <div id="manualAnalysisSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h3>步骤2：模板结构</h3>
                 
-                <div id="templateInfo" style="margin-bottom: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
-                    <p><strong>源文件：</strong><span id="sourceFilename">-</span></p>
-                    <p><strong>可复用部分：</strong><span id="reusableCount">0</span> 个</p>
-                    <p><strong>需要填写：</strong><span id="variableCount">0</span> 个变量</p>
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 8px;">
+                    <p><strong>可复用部分：</strong><span id="manualReusableCount">0</span> 个（已自动填充）</p>
+                    <p><strong>需填写变量：</strong><span id="manualVariableCount">0</span> 个</p>
                 </div>
                 
-                <div id="reusablePartsSection" style="margin-bottom: 20px;">
-                    <h4>可复用部分（模板固定内容）</h4>
-                    <div id="reusablePartsList" style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto;"></div>
+                <div id="manualReusableParts" style="margin-bottom: 20px;">
+                    <h4>可复用部分预览</h4>
+                    <div id="manualReusableList" style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 14px;"></div>
                 </div>
                 
-                <div id="variablePartsSection" style="margin-bottom: 20px;">
-                    <h4>需要填写的变量</h4>
-                    <div id="variablePartsList"></div>
+                <div id="manualVariableParts" style="margin-bottom: 20px;">
+                    <h4>需填写的变量</h4>
+                    <div id="manualVariableList" style="background-color: #fff3e0; padding: 15px; border-radius: 8px;"></div>
                 </div>
                 
-                <button type="button" onclick="showFillForm()">进入填写页面</button>
+                <button type="button" onclick="showManualFillForm()">开始填写</button>
             </div>
             
             <!-- 步骤3：填写变量 -->
-            <div id="fillSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <div id="manualFillSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
                 <h3>步骤3：填写信息</h3>
-                <p style="color: #666; margin-bottom: 15px;">请填写以下信息，AI将结合模板生成完整文书</p>
+                <p style="color: #666; margin-bottom: 15px;">请填写以下变量，系统将结合模板可复用部分生成完整文书</p>
                 
-                <div id="variableInputs"></div>
+                <div id="manualVariableInputs"></div>
                 
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="generationContext">上下文信息（可选）</label>
-                    <textarea id="generationContext" rows="3" placeholder="输入额外的上下文信息，帮助AI更好地生成文书..."></textarea>
-                </div>
-                
-                <button type="button" onclick="generateSmartDocument()">生成文书</button>
-                <div id="generateResult" style="margin-top: 15px;"></div>
+                <button type="button" onclick="generateManualDocument()" style="margin-top: 20px;">生成文书</button>
+                <div id="manualGenerateResult" style="margin-top: 15px;"></div>
             </div>
             
-            <!-- 步骤4：生成的文书展示 -->
-            <div id="resultSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+            <!-- 步骤4：生成结果 -->
+            <div id="manualResultSection" style="display: none; margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
                 <h3>生成的文书</h3>
                 <div class="form-group">
-                    <label for="generatedDocument">文书内容</label>
-                    <textarea id="generatedDocument" rows="15" style="font-family: 'Courier New', monospace;"></textarea>
+                    <label for="manualGeneratedDocument">文书内容</label>
+                    <textarea id="manualGeneratedDocument" rows="20" style="font-family: 'Courier New', monospace; white-space: pre-wrap;"></textarea>
                 </div>
                 
-                <div id="traceabilityInfo" style="margin-top: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
-                    <h4>溯源信息</h4>
-                    <div id="traceabilityContent"></div>
+                <div style="margin-top: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 8px;">
+                    <h4>生成信息</h4>
+                    <p><strong>模板：</strong><span id="manualResultTemplate">-</span></p>
+                    <p><strong>生成时间：</strong><span id="manualResultTime">-</span></p>
+                    <p><strong>使用变量：</strong><span id="manualResultVariables">-</span></p>
                 </div>
                 
-                <button type="button" onclick="saveGeneratedDocument()">保存文书</button>
-                <button type="button" onclick="resetSmartDocumentForm()">重新开始</button>
+                <button type="button" onclick="copyManualDocument()">复制文书</button>
+                <button type="button" onclick="resetManualForm()" style="margin-left: 10px;">重新开始</button>
+            </div>
+        </div>
+        
+        <!-- 案件统计分析与趋势区域 -->
+        <div id="caseAnalysis" class="section">
+            <h2>案件统计分析与趋势</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                基于上传的案件文件，自动分析犯罪类型分布和时间趋势，生成数据可视化图表。
+            </p>
+            
+            <button type="button" onclick="loadCaseAnalysis()">加载统计分析</button>
+            <div id="caseAnalysisResult" style="margin-top: 20px;"></div>
+            
+            <!-- 统计概览 -->
+            <div id="statsOverview" style="display: none; margin-top: 20px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                <h3>统计概览</h3>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">总案件数</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #007bff;" id="totalCases">0</p>
+                    </div>
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">犯罪类型数</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #28a745;" id="crimeTypesCount">0</p>
+                    </div>
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">涉及年份</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #ffc107;" id="yearsCount">0</p>
+                    </div>
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">涉及月份</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #dc3545;" id="monthsCount">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div id="chartsSection" style="display: none; margin-top: 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- 犯罪类型分布图表 -->
+                    <div style="padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3>犯罪类型分布</h3>
+                        <div style="height: 400px;">
+                            <canvas id="crimeTypeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 月度趋势图表 -->
+                    <div style="padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3>犯罪时间趋势（按月）</h3>
+                        <div style="height: 400px;">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 详细数据表格 -->
+            <div id="detailsSection" style="display: none; margin-top: 30px;">
+                <h3>详细数据</h3>
+                
+                <div style="margin-bottom: 30px;">
+                    <h4>犯罪类型详情</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">犯罪类型</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">数量</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">占比</th>
+                            </tr>
+                        </thead>
+                        <tbody id="crimeTypeTable">
+                            <!-- 数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div>
+                    <h4>月度趋势详情</h4>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="padding: 10px; border: 1px solid #ddd;">月份</th>
+                                <th style="padding: 10px; border: 1px solid #ddd;">犯罪数量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyTrendTable">
+                            <!-- 数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 人员查询区域 -->
+        <div id="personQuery" class="section">
+            <h2>人员查询与事件时间轴</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                根据上传的文件，自动生成指定人员的事件时间轴，展示其相关活动和事件。
+            </p>
+            
+            <!-- 查询表单 -->
+            <div style="margin-bottom: 30px;">
+                <div class="form-group">
+                    <label for="personName">人员姓名</label>
+                    <input type="text" id="personName" placeholder="请输入要查询的人员姓名" style="width: 300px; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <button type="button" onclick="queryPersonTimeline()" style="margin-top: 10px;">查询时间轴</button>
+            </div>
+            
+            <!-- 结果区域 -->
+            <div id="personQueryResult" style="margin-top: 20px;"></div>
+            
+            <!-- 时间轴展示 -->
+            <div id="timelineSection" style="display: none; margin-top: 30px;">
+                <h3>事件时间轴</h3>
+                <div id="personTimeline" class="timeline">
+                    <!-- 时间轴内容将通过JavaScript动态填充 -->
+                </div>
+            </div>
+            
+            <!-- 统计信息 -->
+            <div id="timelineStats" style="display: none; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                <h3>统计信息</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">总事件数</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #007bff;" id="totalEvents">0</p>
+                    </div>
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">涉及文件数</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #28a745;" id="totalSources">0</p>
+                    </div>
+                    <div style="padding: 15px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h4 style="color: #666; margin-bottom: 5px;">时间跨度</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: #ffc107;" id="timeSpan">0</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -361,60 +477,7 @@
         <div id="dataManagement" class="section">
             <h2>数据管理</h2>
             
-            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>数据状态</h3>
-                <button type="button" onclick="loadDataStatus()">刷新数据状态</button>
-                <div id="dataStatus" style="margin-top: 15px;"></div>
-            </div>
-            
-            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>业务类型管理</h3>
-                <div style="margin-bottom: 15px;">
-                    <h4>添加业务类型</h4>
-                    <div class="form-group">
-                        <label for="newBusinessTypeName">业务类型名称</label>
-                        <input type="text" id="newBusinessTypeName" placeholder="例如：刑事案件">
-                    </div>
-                    <button type="button" onclick="addBusinessType()">添加业务类型</button>
-                    <div id="addBusinessTypeResult" style="margin-top: 10px;"></div>
-                </div>
-                
-                <div>
-                    <h4>业务类型列表</h4>
-                    <button type="button" onclick="listBusinessTypes()">刷新列表</button>
-                    <div id="businessTypesList" style="margin-top: 10px;"></div>
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <h3>删除文件数据</h3>
-                <div class="form-group">
-                    <label for="deleteFilename">文件名</label>
-                    <select id="deleteFilename" name="filename">
-                        <option value="">请选择要删除的文件</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="deleteVector" name="deleteVector" checked>
-                        删除向量存储数据
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="deleteKnowledgeGraph" name="deleteKnowledgeGraph" checked>
-                        删除知识图谱数据
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="deleteNER" name="deleteNER" checked>
-                        删除NER数据
-                    </label>
-                </div>
-                <button type="button" onclick="deleteFileData()">删除文件数据</button>
-                <div id="deleteResult" style="margin-top: 15px;"></div>
-            </div>
+
             
             <div style="padding: 20px; border: 1px solid #ff0000; border-radius: 8px; background-color: #fff5f5;">
                 <h3 style="color: #ff0000;">清空所有数据</h3>
@@ -429,7 +492,7 @@
         let currentUploadedFile = null;
         
         // 显示指定区域
-        function showSection(sectionId) {
+        function showSection(sectionId, event) {
             document.querySelectorAll('.section').forEach(section => {
                 section.classList.remove('active');
             });
@@ -441,48 +504,17 @@
             });
             event.target.classList.add('active');
             
-            // 如果切换到文件上传页面，加载业务类型列表
-            if (sectionId === 'upload') {
-                loadBusinessTypes();
-            }
+    
             
             // 如果切换到智能文书页面，加载业务类型列表作为模板
             if (sectionId === 'smartDocument') {
                 loadSmartDocBusinessTypes();
             }
             
-            // 如果切换到数据管理页面，加载数据状态和业务类型列表
-            if (sectionId === 'dataManagement') {
-                loadDataStatus();
-                listBusinessTypes();
-            }
+
         }
         
         // 加载业务类型列表到下拉框
-        async function loadBusinessTypes() {
-            const businessTypeSelect = document.getElementById('businessType');
-            
-            try {
-                const response = await fetch('/business-types');
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.business_types && data.business_types.length > 0) {
-                        businessTypeSelect.innerHTML = '<option value="">请选择业务类型</option>';
-                        data.business_types.forEach(type => {
-                            businessTypeSelect.innerHTML += `<option value="${type.name}">${type.name}</option>`;
-                        });
-                    } else {
-                        businessTypeSelect.innerHTML = '<option value="">暂无业务类型，请先添加</option>';
-                    }
-                } else {
-                    businessTypeSelect.innerHTML = '<option value="">加载失败</option>';
-                }
-            } catch (error) {
-                businessTypeSelect.innerHTML = '<option value="">加载失败</option>';
-            }
-        }
-        
         // 上传文件
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -512,11 +544,7 @@
                     currentUploadedFilePath = data.file_path;
                     uploadResult.innerHTML = `<div class="success">上传成功！<br>文件名：${data.filename}<br>状态：${data.status}<br>识别到的实体：${JSON.stringify(data.entities)}<br>分割的块数：${data.chunks_count}</div>`;
                     
-                    // 显示业务类型设置区域
-                    document.getElementById('businessTypeSection').style.display = 'block';
-                    
-                    // 加载业务类型列表
-                    loadBusinessTypes();
+
                 } else {
                     try {
                         const error = await response.json();
@@ -529,205 +557,6 @@
                 uploadResult.innerHTML = `<div class="error">上传失败：${error.message}<br>请确保后端服务器正在运行</div>`;
             }
         });
-        
-        // 保存业务类型
-        async function saveBusinessType() {
-            const businessType = document.getElementById('businessType').value;
-            const customBusinessType = document.getElementById('customBusinessType').value;
-            const splitDocument = document.getElementById('splitDocument').checked;
-            const saveResult = document.getElementById('saveResult');
-            
-            const selectedType = customBusinessType || businessType;
-            
-            if (!selectedType) {
-                saveResult.innerHTML = '<div class="error">请选择或输入业务类型</div>';
-                return;
-            }
-            
-            try {
-                saveResult.innerHTML = '<div>保存中...</div>';
-                
-                // 如果是自定义业务类型，先添加到业务类型列表
-                if (customBusinessType) {
-                    const addResponse = await fetch('/business-types', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            name: customBusinessType,
-                            description: ''
-                        })
-                    });
-                    
-                    if (!addResponse.ok) {
-                        // 如果添加失败（可能已存在），继续执行
-                        console.log('业务类型可能已存在，继续保存...');
-                    }
-                }
-                
-                const response = await fetch('/save-business-type', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        filename: currentUploadedFile,
-                        business_type: selectedType,
-                        split: splitDocument,
-                        file_path: currentUploadedFilePath
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    let mergeInfo = '';
-                    if (data.merged) {
-                        mergeInfo = `<br><strong style="color: #2196F3;">已融合 ${data.files_count} 个文件的模板</strong>`;
-                    }
-                    saveResult.innerHTML = `<div class="success">保存成功！<br>文件名：${data.filename}<br>业务类型：${data.business_type}<br>拆分：${data.split ? '是' : '否'}<br>变量数：${data.variable_count}<br>可复用部分：${data.reusable_count}${mergeInfo}</div>`;
-                    
-                    // 刷新业务类型列表
-                    loadBusinessTypes();
-                } else {
-                    try {
-                        const error = await response.json();
-                        saveResult.innerHTML = `<div class="error">保存失败：${error.detail}</div>`;
-                    } catch {
-                        saveResult.innerHTML = `<div class="error">保存失败：服务器返回错误</div>`;
-                    }
-                }
-            } catch (error) {
-                saveResult.innerHTML = `<div class="error">保存失败：${error.message}<br>请确保后端服务器正在运行</div>`;
-            }
-        }
-        
-        // 重置上传表单
-        function resetUploadForm() {
-            document.getElementById('file').value = '';
-            document.getElementById('businessType').value = '';
-            document.getElementById('customBusinessType').value = '';
-            document.getElementById('splitDocument').checked = false;
-            document.getElementById('uploadResult').innerHTML = '';
-            document.getElementById('saveResult').innerHTML = '';
-            document.getElementById('businessTypeSection').style.display = 'none';
-            currentUploadedFile = null;
-        }
-        
-        // 添加业务类型
-        async function addBusinessType() {
-            const name = document.getElementById('newBusinessTypeName').value;
-            const addBusinessTypeResult = document.getElementById('addBusinessTypeResult');
-            
-            if (!name) {
-                addBusinessTypeResult.innerHTML = '<div class="error">请输入业务类型名称</div>';
-                return;
-            }
-            
-            try {
-                addBusinessTypeResult.innerHTML = '<div>添加中...</div>';
-                
-                const response = await fetch('/business-types', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        description: ''
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    addBusinessTypeResult.innerHTML = `<div class="success">添加成功！<br>名称：${data.name}</div>`;
-                    
-                    // 清空输入框
-                    document.getElementById('newBusinessTypeName').value = '';
-                    
-                    // 刷新列表
-                    listBusinessTypes();
-                } else {
-                    try {
-                        const error = await response.json();
-                        addBusinessTypeResult.innerHTML = `<div class="error">添加失败：${error.detail}</div>`;
-                    } catch {
-                        addBusinessTypeResult.innerHTML = `<div class="error">添加失败：服务器返回错误</div>`;
-                    }
-                }
-            } catch (error) {
-                addBusinessTypeResult.innerHTML = `<div class="error">添加失败：${error.message}<br>请确保后端服务器正在运行</div>`;
-            }
-        }
-        
-        // 列出业务类型
-        async function listBusinessTypes() {
-            const businessTypeList = document.getElementById('businessTypesList');
-            
-            if (!businessTypeList) {
-                console.error('找不到业务类型列表元素');
-                return;
-            }
-            
-            try {
-                businessTypeList.innerHTML = '<div>加载中...</div>';
-                const response = await fetch('/business-types');
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.business_types && data.business_types.length > 0) {
-                        let typesHTML = '<table style="width: 100%; border-collapse: collapse;">';
-                        typesHTML += '<tr style="background-color: #f5f5f5;"><th style="padding: 10px; border: 1px solid #ddd;">名称</th><th style="padding: 10px; border: 1px solid #ddd;">操作</th></tr>';
-                        data.business_types.forEach(type => {
-                            typesHTML += `<tr>`;
-                            typesHTML += `<td style="padding: 10px; border: 1px solid #ddd;">${type.name}</td>`;
-                            typesHTML += `<td style="padding: 10px; border: 1px solid #ddd;"><button onclick="deleteBusinessType('${type.name}')">删除</button></td>`;
-                            typesHTML += `</tr>`;
-                        });
-                        typesHTML += '</table>';
-                        businessTypeList.innerHTML = typesHTML;
-                    } else {
-                        businessTypeList.innerHTML = '<p>暂无业务类型</p>';
-                    }
-                } else {
-                    try {
-                        const error = await response.json();
-                        businessTypeList.innerHTML = `<div class="error">获取失败：${error.detail}</div>`;
-                    } catch {
-                        businessTypeList.innerHTML = `<div class="error">获取失败：服务器返回错误</div>`;
-                    }
-                }
-            } catch (error) {
-                businessTypeList.innerHTML = `<div class="error">获取失败：${error.message}<br>请确保后端服务器正在运行</div>`;
-            }
-        }
-        
-        // 删除业务类型
-        async function deleteBusinessType(name) {
-            if (!confirm(`确定要删除业务类型"${name}"吗？`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/business-types/${encodeURIComponent(name)}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('删除成功！');
-                    listBusinessTypes();
-                } else {
-                    try {
-                        const error = await response.json();
-                        alert(`删除失败：${error.detail}`);
-                    } catch {
-                        alert('删除失败：服务器返回错误');
-                    }
-                }
-            } catch (error) {
-                alert(`删除失败：${error.message}`);
-            }
-        }
         
         // 智能问答
         document.getElementById('qaForm').addEventListener('submit', async function(e) {
@@ -785,159 +614,7 @@
             }
         });
         
-        // 人员查询
-        document.getElementById('queryForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const person = document.getElementById('queryPerson').value;
-            const queryResult = document.getElementById('queryResult');
-            
-            try {
-                queryResult.innerHTML = '<div>查询中...</div>';
-                
-                // 并行查询人员履历和时间轴
-                const [queryResponse, timelineResponse] = await Promise.all([
-                    fetch(`/query?person_id=${encodeURIComponent(person)}&query=${encodeURIComponent('履历')}`),
-                    fetch(`/timeline/${encodeURIComponent(person)}`)
-                ]);
-                
-                let queryHTML = '';
-                let timelineHTML = '';
-                
-                // 处理人员履历查询结果
-                if (queryResponse.ok) {
-                    const data = await queryResponse.json();
-                    if (data.results && data.results.length > 0) {
-                        queryHTML = '<div class="result"><h3>人员履历：</h3>';
-                        data.results.forEach((result, index) => {
-                            queryHTML += `<div class="result-item">${index + 1}. ${result.content}</div>`;
-                        });
-                        queryHTML += '</div>';
-                    } else {
-                        queryHTML = '<div class="result"><h3>人员履历：</h3><p>未找到相关履历</p></div>';
-                    }
-                } else {
-                    queryHTML = '<div class="result"><h3>人员履历：</h3><p>查询失败</p></div>';
-                }
-                
-                // 处理时间轴查询结果
-                if (timelineResponse.ok) {
-                    const data = await timelineResponse.json();
-                    if (data.timeline && data.timeline.length > 0) {
-                        timelineHTML = '<div class="timeline">';
-                        data.timeline.forEach(event => {
-                            timelineHTML += `
-                                <div class="timeline-item">
-                                    <div class="timeline-date">${event.time || event.date}</div>
-                                    <div class="timeline-content">
-                                        <strong>${event.event_type || event.event}</strong><br>
-                                        ${event.content || ''}<br>
-                                        <span class="source-tag">来源：${event.source}（页码：${event.page}）</span>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        timelineHTML += '</div>';
-                    } else {
-                        timelineHTML = '<div class="result"><h3>时间轴：</h3><p>未找到相关事件</p></div>';
-                    }
-                } else {
-                    timelineHTML = '<div class="result"><h3>时间轴：</h3><p>生成失败</p></div>';
-                }
-                
-                queryResult.innerHTML = queryHTML + timelineHTML;
-            } catch (error) {
-                queryResult.innerHTML = `<div class="error">查询失败：${error.message}<br>请确保后端服务器正在运行</div>`;
-            }
-        });
-        
-        // 加载数据状态
-        async function loadDataStatus() {
-            const dataStatusDiv = document.getElementById('dataStatus');
-            dataStatusDiv.innerHTML = '<p>加载中...</p>';
-            
-            try {
-                const response = await fetch('/data-status');
-                const status = await response.json();
-                
-                let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">';
-                
-                // 向量存储状态
-                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
-                html += '<h4>向量存储</h4>';
-                html += `<p>文档数量: ${status.vector_store.document_count}</p>`;
-                html += `<p>文件数量: ${status.vector_store.files.length}</p>`;
-                html += '<ul>';
-                status.vector_store.files.forEach(file => {
-                    html += `<li>${file}</li>`;
-                });
-                html += '</ul>';
-                html += '</div>';
-                
-                // 知识图谱状态
-                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
-                html += '<h4>知识图谱</h4>';
-                html += `<p>实体数量: ${status.knowledge_graph.entity_count}</p>`;
-                html += `<p>关系数量: ${status.knowledge_graph.relation_count}</p>`;
-                html += `<p>文件数量: ${status.knowledge_graph.files.length}</p>`;
-                html += '<ul>';
-                status.knowledge_graph.files.forEach(file => {
-                    html += `<li>${file}</li>`;
-                });
-                html += '</ul>';
-                html += '</div>';
-                
-                // 业务类型状态
-                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
-                html += '<h4>业务类型</h4>';
-                html += `<p>类型数量: ${status.business_types.count}</p>`;
-                html += '<ul>';
-                status.business_types.types.forEach(type => {
-                    html += `<li>${type}</li>`;
-                });
-                html += '</ul>';
-                html += '</div>';
-                
-                // 文件映射状态
-                html += '<div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px;">';
-                html += '<h4>文件业务类型映射</h4>';
-                html += `<p>映射数量: ${status.file_mappings.count}</p>`;
-                html += '<ul>';
-                status.file_mappings.files.forEach(file => {
-                    html += `<li>${file}</li>`;
-                });
-                html += '</ul>';
-                html += '</div>';
-                
-                html += '</div>';
-                
-                dataStatusDiv.innerHTML = html;
-                
-                // 更新删除文件下拉框
-                updateDeleteFilenameSelect(status);
-            } catch (error) {
-                dataStatusDiv.innerHTML = `<div class="error">加载数据状态失败：${error.message}</div>`;
-            }
-        }
-        
-        // 更新删除文件下拉框
-        function updateDeleteFilenameSelect(status) {
-            const deleteFilenameSelect = document.getElementById('deleteFilename');
-            deleteFilenameSelect.innerHTML = '<option value="">请选择要删除的文件</option>';
-            
-            const allFiles = new Set([
-                ...status.vector_store.files,
-                ...status.knowledge_graph.files,
-                ...status.file_mappings.files
-            ]);
-            
-            allFiles.forEach(file => {
-                const option = document.createElement('option');
-                option.value = file;
-                option.textContent = file;
-                deleteFilenameSelect.appendChild(option);
-            });
-        }
+
         
         // 删除文件数据
         async function deleteFileData() {
@@ -1411,32 +1088,530 @@
             URL.revokeObjectURL(url);
         }
         
-        // 删除智能模板
-        async function deleteSmartTemplate(templateId) {
-            if (!confirm('确定要删除这个模板吗？')) {
-                return;
-            }
+        // ==================== 案件统计分析功能 ====================
+        
+        let crimeTypeChart = null;
+        let monthlyTrendChart = null;
+        
+        // 加载案件统计分析数据
+        async function loadCaseAnalysis() {
+            const resultDiv = document.getElementById('caseAnalysisResult');
+            resultDiv.innerHTML = '<div>正在加载统计分析数据...</div>';
             
             try {
-                const response = await fetch(`/smart-templates/${templateId}`, {
-                    method: 'DELETE'
-                });
-                
+                const response = await fetch('/case-analysis');
                 if (response.ok) {
-                    loadSmartDocBusinessTypes();
+                    const data = await response.json();
+                    
+                    // 显示统计概览
+                    displayStatsOverview(data);
+                    
+                    // 绘制图表
+                    drawCharts(data.chart_data);
+                    
+                    // 填充详细数据表格
+                    fillDetailsTables(data);
+                    
+                    // 显示各个区域
+                    document.getElementById('statsOverview').style.display = 'block';
+                    document.getElementById('chartsSection').style.display = 'block';
+                    document.getElementById('detailsSection').style.display = 'block';
+                    
+                    resultDiv.innerHTML = '<div class="success">统计分析加载成功！</div>';
                 } else {
-                    alert('删除失败');
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">加载失败：${error.detail}</div>`;
                 }
             } catch (error) {
-                alert('删除失败：' + error.message);
+                resultDiv.innerHTML = `<div class="error">加载失败：${error.message}<br>请确保后端服务器正在运行</div>`;
             }
         }
         
-        // 页面加载时初始化
+        // 显示统计概览
+        function displayStatsOverview(data) {
+            document.getElementById('totalCases').textContent = data.total_cases || 0;
+            document.getElementById('crimeTypesCount').textContent = data.crime_type_trends ? data.crime_type_trends.length : 0;
+            document.getElementById('yearsCount').textContent = data.yearly_trends ? data.yearly_trends.length : 0;
+            document.getElementById('monthsCount').textContent = data.monthly_trends ? data.monthly_trends.length : 0;
+        }
+        
+        // 绘制图表
+        function drawCharts(chartData) {
+            // 绘制犯罪类型分布图表
+            drawCrimeTypeChart(chartData.crime_type_chart);
+            
+            // 绘制月度趋势图表
+            drawMonthlyTrendChart(chartData.monthly_trend_chart);
+        }
+        
+        // 绘制犯罪类型分布图表
+        function drawCrimeTypeChart(data) {
+            const ctx = document.getElementById('crimeTypeChart').getContext('2d');
+            
+            // 销毁旧图表
+            if (crimeTypeChart) {
+                crimeTypeChart.destroy();
+            }
+            
+            // 创建新图表
+            crimeTypeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: '犯罪数量',
+                        data: data.data || [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '数量'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '犯罪类型'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: '犯罪类型分布统计'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 绘制月度趋势图表
+        function drawMonthlyTrendChart(data) {
+            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+            
+            // 销毁旧图表
+            if (monthlyTrendChart) {
+                monthlyTrendChart.destroy();
+            }
+            
+            // 创建新图表
+            monthlyTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: '犯罪数量',
+                        data: data.data || [],
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '数量'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '月份'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: '犯罪时间趋势（按月）'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 填充详细数据表格
+        function fillDetailsTables(data) {
+            // 填充犯罪类型表格
+            const crimeTypeTable = document.getElementById('crimeTypeTable');
+            crimeTypeTable.innerHTML = '';
+            
+            if (data.crime_type_trends && data.crime_type_trends.length > 0) {
+                data.crime_type_trends.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.crime_type}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.count}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.percentage}%</td>
+                    `;
+                    crimeTypeTable.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3" style="padding: 10px; border: 1px solid #ddd; text-align: center;">暂无数据</td>';
+                crimeTypeTable.appendChild(row);
+            }
+            
+            // 填充月度趋势表格
+            const monthlyTrendTable = document.getElementById('monthlyTrendTable');
+            monthlyTrendTable.innerHTML = '';
+            
+            if (data.monthly_trends && data.monthly_trends.length > 0) {
+                data.monthly_trends.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.month}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${item.count}</td>
+                    `;
+                    monthlyTrendTable.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="2" style="padding: 10px; border: 1px solid #ddd; text-align: center;">暂无数据</td>';
+                monthlyTrendTable.appendChild(row);
+            }
+        }
+        
+        // 重置手动模板表单
+        function resetManualForm() {
+            document.getElementById('manualTemplateSelect').value = '';
+            document.getElementById('templateInfoDisplay').style.display = 'none';
+            document.getElementById('templateSelectResult').innerHTML = '';
+            document.getElementById('manualAnalysisSection').style.display = 'none';
+            document.getElementById('manualFillSection').style.display = 'none';
+            document.getElementById('manualResultSection').style.display = 'none';
+            document.getElementById('analyzeBtn').style.display = 'none';
+            currentTemplateContent = '';
+            currentTemplateAnalysis = null;
+        }
+        
+        // 复制手动生成的文档
+        function copyManualDocument() {
+            const content = document.getElementById('manualGeneratedDocument');
+            content.select();
+            document.execCommand('copy');
+            alert('文档已复制到剪贴板');
+        }
+        
+        // 手动模板管理 - 刷新模板列表
+        async function refreshManualTemplates() {
+            const select = document.getElementById('manualTemplateSelect');
+            const resultDiv = document.getElementById('templateSelectResult');
+            
+            select.innerHTML = '<option value="">请选择模板</option>';
+            resultDiv.innerHTML = '<div>正在刷新模板列表...</div>';
+            
+            try {
+                // 获取模板列表
+                const response = await fetch('/templates-manual');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('模板列表数据:', data);
+                    if (data.templates && data.templates.length > 0) {
+                        data.templates.forEach(file => {
+                            // 确保file是字符串
+                            const fileName = typeof file === 'string' ? file : JSON.stringify(file);
+                            select.innerHTML += `<option value="${fileName}">${fileName}</option>`;
+                        });
+                    }
+                }
+                
+                resultDiv.innerHTML = '<div class="success">模板列表已刷新</div>';
+            } catch (error) {
+                console.error('刷新模板列表失败:', error);
+                resultDiv.innerHTML = `<div class="error">刷新失败：${error.message}</div>`;
+            }
+        }
+        
+        // 手动模板管理 - 模板选择变化
+        function onManualTemplateChange() {
+            const select = document.getElementById('manualTemplateSelect');
+            const templateFilename = select.value;
+            const infoDisplay = document.getElementById('templateInfoDisplay');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (templateFilename) {
+                document.getElementById('templateFilename').textContent = templateFilename;
+                document.getElementById('templateStatus').textContent = '未解析';
+                document.getElementById('templateSize').textContent = '未知';
+                document.getElementById('templateModified').textContent = '未知';
+                infoDisplay.style.display = 'block';
+                analyzeBtn.style.display = 'inline-block';
+            } else {
+                infoDisplay.style.display = 'none';
+                analyzeBtn.style.display = 'none';
+            }
+        }
+        
+        // 手动模板管理 - 解析模板
+        async function analyzeSelectedTemplate() {
+            const templateFilename = document.getElementById('manualTemplateSelect').value;
+            const resultDiv = document.getElementById('templateSelectResult');
+            
+            if (!templateFilename) {
+                resultDiv.innerHTML = '<div class="error">请先选择模板</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div>正在解析模板...</div>';
+            
+            try {
+                // 从后端API获取分析结果
+                const response = await fetch(`/templates-manual/${encodeURIComponent(templateFilename)}/analyze`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    currentTemplateAnalysis = data.analysis;
+                    
+                    document.getElementById('manualReusableCount').textContent = data.reusable_count;
+                    document.getElementById('manualVariableCount').textContent = data.variable_count;
+                    
+                    // 显示可复用部分
+                    const reusableList = document.getElementById('manualReusableList');
+                    reusableList.innerHTML = '';
+                    currentTemplateAnalysis.reusable_parts.forEach((part, index) => {
+                        reusableList.innerHTML += `<div style="margin-bottom: 5px; padding: 5px; background-color: #e8f5e9; border-radius: 4px;">
+                            ${index + 1}. ${part.description || '可复用部分'}: ${part.content}
+                        </div>`;
+                    });
+                    
+                    // 显示变量部分
+                    const variableList = document.getElementById('manualVariableList');
+                    variableList.innerHTML = '';
+                    currentTemplateAnalysis.variable_parts.forEach((variable, index) => {
+                        variableList.innerHTML += `<div style="margin-bottom: 5px; padding: 5px; background-color: #fff3e0; border-radius: 4px;">
+                            ${index + 1}. ${variable.description || variable.name} (示例: ${variable.example || ''})
+                        </div>`;
+                    });
+                    
+                    document.getElementById('manualAnalysisSection').style.display = 'block';
+                    resultDiv.innerHTML = '<div class="success">模板解析成功！</div>';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">解析失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">解析失败：${error.message}</div>`;
+            }
+        }
+        
+        // 手动模板管理 - 显示填写表单
+        function showManualFillForm() {
+            if (!currentTemplateAnalysis) {
+                alert('请先解析模板');
+                return;
+            }
+            
+            const inputsDiv = document.getElementById('manualVariableInputs');
+            inputsDiv.innerHTML = '';
+            
+            if (currentTemplateAnalysis.variable_parts.length > 0) {
+                currentTemplateAnalysis.variable_parts.forEach((variable, index) => {
+                    inputsDiv.innerHTML += `<div class="form-group">
+                        <label for="manual_${variable.id}">${index + 1}. ${variable.description}</label>
+                        <input type="text" id="manual_${variable.id}" placeholder="${variable.example}">
+                    </div>`;
+                });
+            } else {
+                inputsDiv.innerHTML = '<p>该模板没有需要填写的变量</p>';
+            }
+            
+            document.getElementById('manualFillSection').style.display = 'block';
+        }
+        
+        // 手动模板管理 - 生成文书
+        async function generateManualDocument() {
+            if (!currentTemplateAnalysis) {
+                alert('请先解析模板');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('manualGenerateResult');
+            resultDiv.innerHTML = '<div>正在生成文书...</div>';
+            
+            try {
+                // 收集用户输入
+                const variables = {};
+                currentTemplateAnalysis.variable_parts.forEach(variable => {
+                    const input = document.getElementById(`manual_${variable.id}`);
+                    if (input) {
+                        variables[variable.id] = input.value || variable.example;
+                    }
+                });
+                
+                // 从后端API获取生成结果
+                const templateName = document.getElementById('manualTemplateSelect').value;
+                const response = await fetch('/templates-manual/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        template_name: templateName,
+                        variables: variables
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('manualGeneratedDocument').value = data.content;
+                    document.getElementById('manualResultTemplate').textContent = data.template_name;
+                    document.getElementById('manualResultTime').textContent = new Date(data.generated_at).toLocaleString();
+                    document.getElementById('manualResultVariables').textContent = data.variables_used.join(', ');
+                    
+                    document.getElementById('manualResultSection').style.display = 'block';
+                    resultDiv.innerHTML = '<div class="success">文书生成成功！</div>';
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">生成失败：${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">生成失败：${error.message}</div>`;
+            }
+        }
+        
+        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadBusinessTypes();
-            loadSmartDocBusinessTypes();
+            // 尝试加载业务类型列表，如果函数不存在则忽略
+            try {
+                if (typeof loadBusinessTypes === 'function') {
+                    loadBusinessTypes();
+                }
+                if (typeof loadSmartDocBusinessTypes === 'function') {
+                    loadSmartDocBusinessTypes();
+                }
+                if (typeof refreshManualTemplates === 'function') {
+                    refreshManualTemplates(); // 加载手动模板列表
+                }
+            } catch (error) {
+                console.log('初始化函数执行失败:', error);
+            }
         });
+        
+        // 查询人员时间轴
+        async function queryPersonTimeline() {
+            const personName = document.getElementById('personName').value.trim();
+            const resultDiv = document.getElementById('personQueryResult');
+            
+            if (!personName) {
+                resultDiv.innerHTML = '<div class="error">请输入人员姓名</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div>正在查询时间轴，请稍候...</div>';
+            
+            try {
+                const response = await fetch(`/timeline/${encodeURIComponent(personName)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTimeline(data);
+                    displayTimelineStats(data);
+                    resultDiv.innerHTML = `<div class="success">查询成功！找到 ${data.timeline.length} 个事件</div>`;
+                } else {
+                    const error = await response.json();
+                    resultDiv.innerHTML = `<div class="error">查询失败: ${error.detail}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">查询失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 显示时间轴
+        function displayTimeline(data) {
+            const timelineDiv = document.getElementById('personTimeline');
+            const timeline = data.timeline;
+            
+            if (timeline.length === 0) {
+                timelineDiv.innerHTML = '<p style="color: #999;">未找到相关事件</p>';
+                document.getElementById('timelineSection').style.display = 'block';
+                document.getElementById('timelineStats').style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            timeline.forEach(event => {
+                html += `<div class="timeline-item">`;
+                html += `<div class="timeline-date">${event.time || '未知时间'}</div>`;
+                html += `<div class="timeline-content">`;
+                html += `<p>${event.content}</p>`;
+                if (event.event_type) {
+                    html += `<p style="font-size: 12px; color: #666; margin-top: 5px;">事件类型: ${event.event_type}</p>`;
+                }
+                if (event.source) {
+                    html += `<span class="source-tag">来源: ${event.source}</span>`;
+                }
+                html += `</div>`;
+                html += `</div>`;
+            });
+            
+            timelineDiv.innerHTML = html;
+            document.getElementById('timelineSection').style.display = 'block';
+        }
+        
+        // 显示时间轴统计信息
+        function displayTimelineStats(data) {
+            const timeline = data.timeline;
+            
+            if (timeline.length === 0) {
+                document.getElementById('timelineStats').style.display = 'none';
+                return;
+            }
+            
+            // 计算统计信息
+            const totalEvents = timeline.length;
+            const sources = new Set();
+            const times = [];
+            
+            timeline.forEach(event => {
+                if (event.source) {
+                    sources.add(event.source);
+                }
+                if (event.time) {
+                    times.push(event.time);
+                }
+            });
+            
+            const totalSources = sources.size;
+            let timeSpan = '未知';
+            
+            if (times.length > 0) {
+                times.sort();
+                timeSpan = `${times[0]} - ${times[times.length - 1]}`;
+            }
+            
+            // 更新统计信息
+            document.getElementById('totalEvents').textContent = totalEvents;
+            document.getElementById('totalSources').textContent = totalSources;
+            document.getElementById('timeSpan').textContent = timeSpan;
+            
+            document.getElementById('timelineStats').style.display = 'block';
+        }
     </script>
 </body>
 </html>

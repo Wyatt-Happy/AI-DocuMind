@@ -10,6 +10,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from typing import Dict
 
 class QuestionRequest(BaseModel):
     question: str
@@ -24,6 +25,7 @@ from core.knowledge_graph import KnowledgeGraph
 from qa_system.qa_processor import QAProcessor
 from document_processing.document_processor import DocumentProcessor
 from document_processing.smart_document_generator import SmartDocumentGenerator
+from document_processing.template_manager import template_manager
 from analysis.case_analyzer import CaseAnalyzer
 from analysis.timeline_generator import TimelineGenerator
 from multimodal.multimodal_processor import MultimodalProcessor
@@ -437,6 +439,134 @@ async def get_case_analysis():
     except Exception as e:
         logger.error(f"获取案件分析时出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"获取案件分析时出错: {str(e)}")
+
+@app.get("/templates-manual")
+async def list_manual_templates():
+    """获取手动模板列表"""
+    try:
+        import os
+        template_dir = "templates/documents"
+        if not os.path.exists(template_dir):
+            return {"templates": []}
+        
+        # 获取文件夹中的所有文件
+        files = [f for f in os.listdir(template_dir) if os.path.isfile(os.path.join(template_dir, f))]
+        return {"templates": files}
+    except Exception as e:
+        logger.error(f"获取模板列表时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取模板列表时出错: {str(e)}")
+
+@app.post("/templates-manual/{template_name}/analyze")
+async def analyze_manual_template(template_name: str):
+    """分析手动模板文件"""
+    try:
+        import os
+        from document_processing.smart_document_generator import SmartDocumentGenerator
+        from document_processing.file_parser import parse_file
+        
+        template_dir = "templates/documents"
+        template_path = os.path.join(template_dir, template_name)
+        
+        if not os.path.exists(template_path):
+            raise HTTPException(status_code=404, detail=f"模板文件不存在: {template_name}")
+        
+        # 使用file_parser解析文件内容（支持PDF、Word、TXT等多种格式）
+        try:
+            parse_result = parse_file(template_path)
+            content = parse_result.get('full_content', '')
+            if not content:
+                raise HTTPException(status_code=400, detail="无法从文件中提取文本内容")
+        except Exception as parse_error:
+            logger.error(f"解析文件失败: {str(parse_error)}")
+            raise HTTPException(status_code=400, detail=f"解析文件失败: {str(parse_error)}")
+        
+        # 分析文档结构
+        generator = SmartDocumentGenerator()
+        analysis = generator.analyze_document_structure(content)
+        
+        # 保存分析结果
+        analysis_dir = "templates/analysis"
+        os.makedirs(analysis_dir, exist_ok=True)
+        
+        analysis_path = os.path.join(analysis_dir, f"{os.path.splitext(template_name)[0]}_analysis.json")
+        import json
+        with open(analysis_path, 'w', encoding='utf-8') as f:
+            json.dump(analysis, f, ensure_ascii=False, indent=2)
+        
+        return {
+            "template_name": template_name,
+            "analysis": analysis,
+            "variable_count": len(analysis.get("variable_parts", [])),
+            "reusable_count": len(analysis.get("reusable_parts", []))
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"分析模板时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"分析模板时出错: {str(e)}")
+
+class GenerateManualDocumentRequest(BaseModel):
+    template_name: str
+    variables: Dict[str, str]
+
+@app.post("/templates-manual/generate")
+async def generate_manual_document(request: GenerateManualDocumentRequest):
+    """根据模板和用户输入生成文书"""
+    try:
+        import os
+        import json
+        from document_processing.smart_document_generator import SmartDocumentGenerator
+        from document_processing.file_parser import parse_file
+        
+        template_name = request.template_name
+        variables = request.variables
+        
+        # 读取分析结果
+        analysis_dir = "templates/analysis"
+        analysis_path = os.path.join(analysis_dir, f"{os.path.splitext(template_name)[0]}_analysis.json")
+        
+        if not os.path.exists(analysis_path):
+            raise HTTPException(status_code=404, detail=f"模板分析结果不存在，请先分析模板")
+        
+        with open(analysis_path, 'r', encoding='utf-8') as f:
+            analysis = json.load(f)
+        
+        # 读取模板文件（使用file_parser解析PDF、Word等多种格式）
+        template_dir = "templates/documents"
+        template_path = os.path.join(template_dir, template_name)
+        
+        if not os.path.exists(template_path):
+            raise HTTPException(status_code=404, detail=f"模板文件不存在: {template_name}")
+        
+        try:
+            parse_result = parse_file(template_path)
+            content = parse_result.get('full_content', '')
+            if not content:
+                raise HTTPException(status_code=400, detail="无法从文件中提取文本内容")
+        except Exception as parse_error:
+            logger.error(f"解析文件失败: {str(parse_error)}")
+            raise HTTPException(status_code=400, detail=f"解析文件失败: {str(parse_error)}")
+        
+        # 替换变量
+        for var_name, var_value in variables.items():
+            content = content.replace(f"{{{{ {var_name} }}}}", var_value)
+            content = content.replace(f"{{{{{var_name}}}}}", var_value)
+        
+        # 生成文书
+        generator = SmartDocumentGenerator()
+        generated_content = content
+        
+        return {
+            "content": generated_content,
+            "template_name": template_name,
+            "generated_at": datetime.now().isoformat(),
+            "variables_used": list(variables.keys())
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"生成文书时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"生成文书时出错: {str(e)}")
 
 @app.get("/timeline/{person_id}")
 async def get_person_timeline(person_id: str):
@@ -1236,6 +1366,138 @@ async def generate_document_from_analysis(request: GenerateDocumentRequest):
     except Exception as e:
         logger.error(f"生成文档时出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"生成文档时出错: {str(e)}")
+
+# ==================== 新的智能文书API（手动模板管理） ====================
+
+@app.get("/templates-manual")
+async def list_manual_templates():
+    """获取所有手动管理的模板列表"""
+    try:
+        templates = template_manager.scan_templates()
+        return {
+            "templates": templates,
+            "total": len(templates),
+            "analyzed": sum(1 for t in templates if t["is_analyzed"])
+        }
+    except Exception as e:
+        logger.error(f"获取模板列表时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取模板列表时出错: {str(e)}")
+
+
+@app.get("/templates-manual/{template_name}")
+async def get_manual_template(template_name: str):
+    """获取指定模板的详细信息"""
+    try:
+        template = template_manager.get_template(template_name)
+        if not template:
+            raise HTTPException(status_code=404, detail=f"模板不存在: {template_name}")
+        
+        # 如果已分析，返回分析结果
+        if template["is_analyzed"]:
+            analysis = template_manager.get_analysis(template_name)
+            template["analysis"] = analysis
+        
+        return template
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取模板信息时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取模板信息时出错: {str(e)}")
+
+
+@app.post("/templates-manual/{template_name}/analyze")
+async def analyze_manual_template(template_name: str, force: bool = False):
+    """分析指定模板文档结构
+    
+    Args:
+        template_name: 模板名称
+        force: 是否强制重新分析
+    """
+    try:
+        result = template_manager.analyze_template(template_name, force_reanalyze=force)
+        return {
+            "success": True,
+            "template_name": template_name,
+            "analyzed_at": result["analyzed_at"],
+            "variable_count": len(result.get("variable_parts", [])),
+            "reusable_count": len(result.get("reusable_parts", [])),
+            "analysis": result["analysis"]
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"分析模板时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"分析模板时出错: {str(e)}")
+
+
+@app.get("/templates-manual/{template_name}/analysis")
+async def get_manual_template_analysis(template_name: str):
+    """获取模板的分析结果（如果已分析）"""
+    try:
+        analysis = template_manager.get_analysis(template_name)
+        if not analysis:
+            raise HTTPException(status_code=404, detail=f"模板未分析或不存在: {template_name}")
+        return analysis
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取分析结果时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取分析结果时出错: {str(e)}")
+
+
+class GenerateFromTemplateRequest(BaseModel):
+    template_name: str
+    variables: dict
+
+
+@app.post("/templates-manual/generate")
+async def generate_from_manual_template(request: GenerateFromTemplateRequest):
+    """根据手动管理的模板生成文书"""
+    try:
+        document = template_manager.generate_document(
+            request.template_name, 
+            request.variables
+        )
+        
+        return {
+            "success": True,
+            "template_name": request.template_name,
+            "content": document,
+            "generated_at": datetime.now().isoformat(),
+            "variables_used": list(request.variables.keys())
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"生成文书时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"生成文书时出错: {str(e)}")
+
+
+@app.delete("/templates-manual/{template_name}")
+async def delete_manual_template(template_name: str):
+    """删除指定模板"""
+    try:
+        success = template_manager.delete_template(template_name)
+        if not success:
+            raise HTTPException(status_code=404, detail=f"模板不存在: {template_name}")
+        return {"success": True, "message": f"模板已删除: {template_name}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"删除模板时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"删除模板时出错: {str(e)}")
+
+
+@app.get("/templates-manual-stats")
+async def get_manual_template_statistics():
+    """获取模板统计信息"""
+    try:
+        stats = template_manager.get_template_statistics()
+        return stats
+    except Exception as e:
+        logger.error(f"获取统计信息时出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取统计信息时出错: {str(e)}")
+
 
 if __name__ == "__main__":
     print("Starting server...")

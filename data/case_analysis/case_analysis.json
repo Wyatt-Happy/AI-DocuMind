@@ -1,85 +1,94 @@
 {
-  "yearly_trends": [
-    {
-      "year": "1997",
-      "count": 2
-    },
-    {
-      "year": "2024",
-      "count": 8
-    },
-    {
-      "year": "2025",
-      "count": 7
-    },
-    {
-      "year": "2027",
-      "count": 1
-    }
-  ],
+  "yearly_trends": [],
+  "monthly_trends": [],
   "case_type_trends": [
     {
+      "case_type": "诉讼",
+      "count": 13,
+      "percentage": 72.22
+    },
+    {
       "case_type": "案件",
-      "count": 31,
-      "percentage": 86.11
-    },
+      "count": 7,
+      "percentage": 38.89
+    }
+  ],
+  "crime_type_trends": [
     {
-      "case_type": "刑事案件",
-      "count": 16,
-      "percentage": 44.44
-    },
-    {
-      "case_type": "行政案件",
-      "count": 12,
+      "crime_type": "盗窃罪",
+      "count": 6,
       "percentage": 33.33
     },
     {
-      "case_type": "诉讼",
-      "count": 8,
+      "crime_type": "诈骗罪",
+      "count": 4,
+      "percentage": 22.22
+    },
+    {
+      "crime_type": "危险驾驶罪",
+      "count": 4,
       "percentage": 22.22
     }
   ],
   "party_activity": [
     {
-      "party": "的案件作为定案",
-      "count": 4
+      "party": "人开四海",
+      "count": 2
     },
     {
-      "party": "明确申请上述鉴定意见",
-      "count": 4
+      "party": "人开四海涉嫌危险驾",
+      "count": 2
     },
     {
-      "party": "承担举证不",
-      "count": 4
+      "party": "人有权委托辩护人和认",
+      "count": 2
     },
     {
-      "party": "制作",
-      "count": 4
+      "party": "人及其值班律师的意见",
+      "count": 2
     },
     {
-      "party": "吊销机动车驾驶证行政",
-      "count": 4
+      "party": "人同意本案适用速裁程",
+      "count": 2
     },
     {
-      "party": "罚款的行政处罚",
-      "count": 4
+      "party": "人开四海为办理前往西",
+      "count": 2
     },
     {
-      "party": "进行了询问",
-      "count": 4
+      "party": "人开四海在县公安局院",
+      "count": 2
     },
     {
-      "party": "违法事实后",
-      "count": 4
+      "party": "人开四海的供述和辩解",
+      "count": 2
     },
     {
-      "party": "拟作出的行政处罚的事",
-      "count": 4
+      "party": "人开四海对指控的犯罪",
+      "count": 2
     },
     {
-      "party": "认定申请人实施醉酒驾",
-      "count": 4
+      "party": "人开四海在道路上醉酒",
+      "count": 2
     }
   ],
-  "total_cases": 36
+  "total_cases": 18,
+  "chart_data": {
+    "crime_type_chart": {
+      "labels": [
+        "盗窃罪",
+        "诈骗罪",
+        "危险驾驶罪"
+      ],
+      "data": [
+        6,
+        4,
+        4
+      ]
+    },
+    "monthly_trend_chart": {
+      "labels": [],
+      "data": []
+    }
+  }
 }

@@ -28,12 +28,8 @@ class TfidfVectorStore:
         self.texts.extend(texts)
         self.metadatas.extend(metadatas)
         
-        if self.vectors is None:
-            self.vectors = self.vectorizer.fit_transform(self.texts)
-        else:
-            new_vectors = self.vectorizer.transform(texts)
-            from scipy.sparse import vstack
-            self.vectors = vstack([self.vectors, new_vectors])
+        # 重新训练vectorizer以包含所有词汇
+        self.vectors = self.vectorizer.fit_transform(self.texts)
         
         # 构建FAISS索引
         self._build_faiss_index()
